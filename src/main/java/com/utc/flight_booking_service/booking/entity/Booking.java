@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,13 +49,34 @@ public class Booking extends BaseEntity {
             mappedBy = "booking",
             orphanRemoval = true
     )
-    List<Passenger> passengers;
+    @Builder.Default
+    @ToString.Exclude
+    List<Passenger> passengers = new ArrayList<>();
 
     @OneToMany(
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY,
-            mappedBy = "booking"
+            mappedBy = "booking",
+            orphanRemoval = true
     )
-    List<BookingFlight> bookingFlights;
+    @Builder.Default
+    @ToString.Exclude
+    List<BookingFlight> bookingFlights = new ArrayList<>();
+
+    public void addPassenger(Passenger passenger) {
+        if(this.passengers == null) {
+            this.passengers = new ArrayList<>();
+        }
+        passengers.add(passenger);
+        passenger.setBooking(this);
+    }
+
+    public void addBookingFlight(BookingFlight bookingFlight) {
+        if(this.bookingFlights == null) {
+            this.bookingFlights = new ArrayList<>();
+        }
+        bookingFlights.add(bookingFlight);
+        bookingFlight.setBooking(this);
+    }
 
 }
