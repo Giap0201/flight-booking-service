@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,7 +39,15 @@ public class Booking extends BaseEntity {
     BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     BookingStatus status;
+
+    @Column(name = "currency", length = 3)
+    @Builder.Default
+    String currency = "VND";
+
+    @Column(name = "expire_at")
+    LocalDateTime expireAt;
 
     @Column(name = "user_id")
     UUID userId;
@@ -64,7 +73,7 @@ public class Booking extends BaseEntity {
     List<BookingFlight> bookingFlights = new ArrayList<>();
 
     public void addPassenger(Passenger passenger) {
-        if(this.passengers == null) {
+        if (this.passengers == null) {
             this.passengers = new ArrayList<>();
         }
         passengers.add(passenger);
@@ -72,7 +81,7 @@ public class Booking extends BaseEntity {
     }
 
     public void addBookingFlight(BookingFlight bookingFlight) {
-        if(this.bookingFlights == null) {
+        if (this.bookingFlights == null) {
             this.bookingFlights = new ArrayList<>();
         }
         bookingFlights.add(bookingFlight);

@@ -29,6 +29,8 @@ public class BookingFlight extends BaseEntity {
     @Column(name = "flight_id", nullable = false)
     UUID flightId;
 
+    @Column(name = "flight_class_id", nullable = false)
+    UUID flightClassId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
