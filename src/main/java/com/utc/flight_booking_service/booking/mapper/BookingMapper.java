@@ -16,6 +16,10 @@ public interface BookingMapper {
     @Mapping(target = "expireAt", ignore = true)
     @Mapping(target = "passengers", ignore = true)
     @Mapping(target = "bookingFlights", ignore = true)
+    @Mapping(target = "tickets", ignore = true)
+    @Mapping(target = "totalFareAmount", ignore = true)
+    @Mapping(target = "totalTaxAmount", ignore = true)
+    @Mapping(target = "totalDiscountAmount", ignore = true)
     Booking toBooking(BookingRequest request);
 
     @Mapping(source = "bookingFlights", target = "flights")

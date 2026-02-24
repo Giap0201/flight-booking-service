@@ -26,6 +26,8 @@ public enum ErrorCode {
     DOB_MUST_BE_IN_PAST(2008, "Dob must be in past", HttpStatus.BAD_REQUEST),
     GENDER_REQUIRED(2009, "Gender required", HttpStatus.BAD_REQUEST),
     PASSENGER_TYPE_REQUIRED(2010, "Passenger type required", HttpStatus.BAD_REQUEST),
+
+    CANNOT_CREATE_PNR_CODE(2011, "Can't create pnr code", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
     private int code;
     private String message;
