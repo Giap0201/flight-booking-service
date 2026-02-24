@@ -9,6 +9,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -37,4 +39,9 @@ public class Passenger extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id")
     Booking booking;
+
+    @OneToMany(mappedBy = "passenger", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    @ToString.Exclude
+    List<Ticket> tickets = new ArrayList<>();
 }

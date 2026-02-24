@@ -1,4 +1,4 @@
-package com.utc.flight_booking_service.booking;
+package com.utc.flight_booking_service.booking.utils;
 
 import java.security.SecureRandom;
 

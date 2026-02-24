@@ -2,16 +2,18 @@ package com.utc.flight_booking_service.booking.impl;
 
 import com.utc.flight_booking_service.booking.BookingRepository;
 import com.utc.flight_booking_service.booking.BookingService;
-import com.utc.flight_booking_service.booking.PnrGenerator;
+import com.utc.flight_booking_service.booking.PriceService;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.entity.BookingFlight;
 import com.utc.flight_booking_service.booking.entity.Passenger;
+import com.utc.flight_booking_service.booking.entity.Ticket;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.booking.mapper.BookingFlightMapper;
 import com.utc.flight_booking_service.booking.mapper.BookingMapper;
 import com.utc.flight_booking_service.booking.mapper.PassengerMapper;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
+import com.utc.flight_booking_service.booking.utils.PnrGenerator;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import jakarta.transaction.Transactional;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional
@@ -34,6 +37,7 @@ public class BookingServiceImpl implements BookingService {
     BookingMapper bookingMapper;
     PassengerMapper passengerMapper;
     BookingFlightMapper bookingFlightMapper;
+    PriceService priceService;
 
     @Override
     public BookingResponse createBooking(BookingRequest request) {
@@ -58,6 +62,8 @@ public class BookingServiceImpl implements BookingService {
             booking.addBookingFlight(bookingFlight);
         }
 
+        List<Ticket> tickets = priceService.calculateTickets(booking, request.getFlights());
+        tickets.forEach(booking::addTicket);
         Booking savedBooking = bookingRepository.save(booking);
         return bookingMapper.toBookingResponse(savedBooking);
     }

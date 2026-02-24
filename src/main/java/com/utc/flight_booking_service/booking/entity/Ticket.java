@@ -48,8 +48,8 @@ public class Ticket extends BaseEntity {
     @Builder.Default
     TicketStatus status = TicketStatus.RESERVED;
 
-    @Column(name = "passenger_id", nullable = false)
-    UUID passengerId;
+//    @Column(name = "passenger_id", nullable = false)
+//    UUID passengerId;
 
     @Column(name = "flight_id", nullable = false)
     UUID flightId;
@@ -60,4 +60,8 @@ public class Ticket extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
     Booking booking;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "passenger_id", nullable = false)
+    Passenger passenger;
 }

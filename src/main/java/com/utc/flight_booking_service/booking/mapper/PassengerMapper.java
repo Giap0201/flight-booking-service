@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 public interface PassengerMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "booking", ignore = true)
+    @Mapping(target = "type", ignore = true)
     Passenger toPassenger(PassengerRequest passengerRequest);
 
     PassengerResponse toPassengerResponse(Passenger passenger);
