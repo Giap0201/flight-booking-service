@@ -1,7 +1,5 @@
 package com.utc.flight_booking_service.booking.response;
 
-import com.utc.flight_booking_service.booking.entity.Booking;
-import com.utc.flight_booking_service.booking.enums.FlightDirection;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

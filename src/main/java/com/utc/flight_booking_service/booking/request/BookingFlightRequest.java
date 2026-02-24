@@ -1,6 +1,5 @@
 package com.utc.flight_booking_service.booking.request;
 
-import com.utc.flight_booking_service.booking.enums.FlightDirection;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

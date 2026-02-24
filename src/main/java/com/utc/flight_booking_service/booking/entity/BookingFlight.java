@@ -1,13 +1,12 @@
 package com.utc.flight_booking_service.booking.entity;
 
-import com.utc.flight_booking_service.booking.enums.FlightDirection;
 import com.utc.flight_booking_service.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -19,12 +18,17 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingFlight extends BaseEntity {
-    @Column(name = "price_at_booking")
-    BigDecimal priceAtBooking;
+    @Column(name = "segment_no", nullable = false)
+    int segmentNo;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "direction", nullable = false)
-    FlightDirection direction;
+    @Column(name = "origin_flight_number")
+    String originFlightNumber;
+
+    @Column(name = "origin_departure_time")
+    LocalDateTime originDepartureTime;
+
+    @Column(name = "origin_arrival_time")
+    LocalDateTime originArrivalTime;
 
     @Column(name = "flight_id", nullable = false)
     UUID flightId;
