@@ -14,7 +14,6 @@ public enum ErrorCode {
 
 
     //BOOKING (2XXX)
-    DIRECTION_REQUIRED(2000, "Direction required", HttpStatus.BAD_REQUEST),
     FLIGHT_ID_REQUIRED(2001, "Flight id required", HttpStatus.BAD_REQUEST),
     FLIGHT_CLASS_ID_REQUIRED(2002, "Flight class id required", HttpStatus.BAD_REQUEST),
 

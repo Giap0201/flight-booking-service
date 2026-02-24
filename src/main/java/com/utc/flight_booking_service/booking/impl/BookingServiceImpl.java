@@ -2,6 +2,9 @@ package com.utc.flight_booking_service.booking.impl;
 
 import com.utc.flight_booking_service.booking.*;
 import com.utc.flight_booking_service.booking.entity.Booking;
+import com.utc.flight_booking_service.booking.mapper.BookingFlightMapper;
+import com.utc.flight_booking_service.booking.mapper.BookingMapper;
+import com.utc.flight_booking_service.booking.mapper.PassengerMapper;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
 import jakarta.transaction.Transactional;

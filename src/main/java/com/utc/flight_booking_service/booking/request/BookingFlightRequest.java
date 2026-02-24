@@ -12,9 +12,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingFlightRequest {
-    @NotNull(message = "DIRECTION_REQUIRED")
-    FlightDirection direction;
-
     @NotNull(message = "FLIGHT_ID_REQUIRED")
     UUID flightId;
 

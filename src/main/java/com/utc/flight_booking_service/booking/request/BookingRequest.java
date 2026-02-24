@@ -31,6 +31,8 @@ public class BookingRequest {
     @Builder.Default
     String currency = "VND";
 
+    String promotionCode;
+
     UUID userId;
 
     @NotEmpty(message = "FLIGHTS_REQUIRED")

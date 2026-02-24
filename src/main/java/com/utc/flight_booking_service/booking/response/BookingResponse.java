@@ -24,7 +24,11 @@ public class BookingResponse {
     String contactName;
     String contactEmail;
     String contactPhone;
-
+    BigDecimal totalFareAmount;
+    BigDecimal totalTaxAmount;
+    BigDecimal totalDiscountAmount;
+    String promotionCode;
     List<BookingFlightResponse> flights;
     List<PassengerResponse> passengers;
+    List<TicketResponse> tickets;
 }
