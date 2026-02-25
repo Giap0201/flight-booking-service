@@ -11,10 +11,11 @@ import java.time.OffsetDateTime;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface FlightExternalMapper {
+    static final int DAYS_TO_SHIFT = 30;
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "flightNumber", source = "flight.iata")
-    @Mapping(target = "status", source = "flightStatus")
+    @Mapping(target = "status", constant = "SCHEDULED")
     @Mapping(target = "departureTime", source = "departure.scheduled")
     @Mapping(target = "arrivalTime", source = "arrival.scheduled")
     @Mapping(target = "airline.code", source = "airline.iata")
@@ -34,12 +35,11 @@ public interface FlightExternalMapper {
             return null;
         }
         try {
-            // Bước 1: Parse chuỗi có chứa offset (+00:00) thành OffsetDateTime
-            // Bước 2: Chuyển OffsetDateTime thành LocalDateTime để tương thích với Database
-            return OffsetDateTime.parse(value).toLocalDateTime();
+            return OffsetDateTime.parse(value)
+                    .toLocalDateTime()
+                    .plusDays(DAYS_TO_SHIFT); // Cộng thêm 30 ngày vào tương lai
         } catch (Exception e) {
-            // Fallback (dự phòng) trường hợp API trả về format không có dấu +
-            return LocalDateTime.parse(value);
+            return LocalDateTime.parse(value).plusDays(DAYS_TO_SHIFT); // Fallback cũng cộng thêm
         }
     }
 }

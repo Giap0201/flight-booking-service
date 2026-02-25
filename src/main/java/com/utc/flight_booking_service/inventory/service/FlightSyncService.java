@@ -1,7 +1,6 @@
 package com.utc.flight_booking_service.inventory.service;
 
 import com.utc.flight_booking_service.inventory.client.AviationstackClient;
-import com.utc.flight_booking_service.inventory.dto.AviationAirportResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.AviationFlightDTO;
 import com.utc.flight_booking_service.inventory.dto.AviationResponseDTO;
 import com.utc.flight_booking_service.inventory.entity.*;
@@ -10,7 +9,6 @@ import com.utc.flight_booking_service.inventory.repository.AircraftRepository;
 import com.utc.flight_booking_service.inventory.repository.AirlineRepository;
 import com.utc.flight_booking_service.inventory.repository.AirportRepository;
 import com.utc.flight_booking_service.inventory.repository.FlightRepository;
-import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,7 +16,6 @@ import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,83 +35,81 @@ public class FlightSyncService {
     @Value("${aviationstack.api.key}")
     private String apiKey;
 
-    @Transactional
     public void fetchAndMapFlights() {
         AviationResponseDTO response = aviationClient.getFlights(apiKey, 100);
 
         if (response == null || response.getData() == null) return;
 
-        List<Flight> flightsToSave = new ArrayList<>();
+        int successCount = 0;
+        int failCount = 0;
 
         for (var dto : response.getData()) {
-            if (dto.getDeparture() == null || dto.getArrival() == null || dto.getAirline() == null) continue;
-            if (dto.getDeparture().getIata() == null || dto.getArrival().getIata() == null) continue;
+            // BỌC TRY-CATCH CHO TỪNG CHUYẾN BAY
+            try {
+                if (dto.getDeparture() == null || dto.getArrival() == null || dto.getAirline() == null) continue;
+                if (dto.getDeparture().getIata() == null || dto.getArrival().getIata() == null) continue;
 
-            String aviationFlightId = flightMapper.generateAviationId(dto);
-            Optional<Flight> existingFlightOpt = flightRepository.findByAviationFlightId(aviationFlightId);
+                String aviationFlightId = flightMapper.generateAviationId(dto);
+                Optional<Flight> existingFlightOpt = flightRepository.findByAviationFlightId(aviationFlightId);
 
-            if (existingFlightOpt.isPresent()) {
-                // NẾU ĐÃ TỒN TẠI (UPSERT): Cập nhật trạng thái hoặc giờ bay nếu cần
-                Flight existingFlight = existingFlightOpt.get();
-                existingFlight.setStatus(dto.getFlightStatus());
-                flightsToSave.add(existingFlight);
-            } else {
-                // NẾU CHƯA TỒN TẠI (INSERT): Logic "Find or Create"
-                Airline airline = getOrCreateAirline(dto.getAirline());
-                Airport origin = getOrCreateAirport(dto.getDeparture().getIata());
-                Airport destination = getOrCreateAirport(dto.getArrival().getIata());
-                Aircraft aircraft = getOrCreateAircraft(dto.getAircraft());
+                if (existingFlightOpt.isPresent()) {
+                    // CẬP NHẬT (UPSERT)
+                    Flight existingFlight = existingFlightOpt.get();
+                    existingFlight.setStatus(dto.getFlightStatus());
 
-                Flight flight = flightMapper.toEntity(dto);
-                flight.setAirline(airline);
-                flight.setOrigin(origin);
-                flight.setDestination(destination);
-                flight.setAircraft(aircraft);
+                    flightRepository.save(existingFlight);
+                    successCount++;
+                } else {
+                    // TẠO MỚI (INSERT)
+                    Airline airline = getOrCreateAirline(dto.getAirline());
+                    Airport origin = getOrCreateAirport(
+                            dto.getDeparture().getIata(),
+                            dto.getDeparture().getAirport(),
+                            dto.getDeparture().getTimezone()
+                    );
+                    Airport destination = getOrCreateAirport(
+                            dto.getArrival().getIata(),
+                            dto.getArrival().getAirport(),
+                            dto.getArrival().getTimezone()
+                    );
+                    Aircraft aircraft = getOrCreateAircraft(dto.getAircraft());
 
-                // Simulation Engine chỉ chạy cho chuyến bay mới
-                List<FlightClass> flightClasses = enrichmentService.enrichFlight(flight, aircraft);
-                flight.setFlightClasses(flightClasses);
+                    Flight flight = flightMapper.toEntity(dto);
+                    flight.setAirline(airline);
+                    flight.setOrigin(origin);
+                    flight.setDestination(destination);
+                    flight.setAircraft(aircraft);
 
-                flightsToSave.add(flight);
+                    List<FlightClass> flightClasses = enrichmentService.enrichFlight(flight, aircraft);
+                    flight.setFlightClasses(flightClasses);
+
+                    flightRepository.save(flight);
+                    successCount++;
+                }
+            } catch (Exception e) {
+                // NẾU LỖI 1 CHUYẾN, CHỈ LOG RA VÀ CHẠY TIẾP VÒNG LẶP CHO CHUYẾN KHÁC
+                System.err.println("Lỗi khi lưu chuyến bay " + flightMapper.generateAviationId(dto) + ": " + e.getMessage());
+                failCount++;
             }
         }
 
-        flightRepository.saveAll(flightsToSave);
+        System.out.println("Tổng kết Sync: Thành công " + successCount + ", Thất bại " + failCount);
     }
 
     // ==========================================
     // LOGIC FIND OR CREATE
     // ==========================================
 
-    private Airport getOrCreateAirport(String code) {
+    private Airport getOrCreateAirport(String code, String name, String timezone) {
         String safeCode = (code != null && !code.trim().isEmpty()) ? code : "UNK";
 
         return airportRepository.findById(safeCode).orElseGet(() -> {
             Airport newAirport = new Airport();
             newAirport.setCode(safeCode);
-            newAirport.setName("Airport " + safeCode);
-
-            // Gọi API phụ để lấy City và Country
-            try {
-                if (!"UNK".equals(safeCode)) {
-                    AviationAirportResponseDTO res = aviationClient.getAirportDetails(apiKey, safeCode);
-
-                    if (res != null && res.getData() != null && !res.getData().isEmpty()) {
-                        // var detail lúc này sẽ mang kiểu AviationAirportResponseDTO.AirportDTO
-                        var detail = res.getData().getFirst();
-
-                        // Đã có thể gọi getAirportName() thoải mái mà không bị lỗi
-                        newAirport.setName(detail.getAirportName() != null ? detail.getAirportName() : safeCode);
-                        newAirport.setCityCode(detail.getCityIataCode());
-                        newAirport.setCountryCode(detail.getCountryIso2());
-                        newAirport.setTimezone(detail.getTimezone());
-                    }
-                }
-            } catch (Exception e) {
-                // Fallback im lặng nếu API airports bị lỗi
-                System.err.println("Không thể fetch chi tiết cho sân bay: " + safeCode);
-            }
-
+            newAirport.setName(name != null ? name : "Airport " + safeCode);
+            newAirport.setCityCode(safeCode);
+            newAirport.setCountryCode("VN"); // Default
+            newAirport.setTimezone(timezone);
             return airportRepository.save(newAirport);
         });
     }

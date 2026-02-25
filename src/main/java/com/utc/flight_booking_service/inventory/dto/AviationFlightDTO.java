@@ -37,6 +37,7 @@ public class AviationFlightDTO {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ArrivalDTO {
         String airport;
+        String timezone;
         String iata;     // Map to Airport.code
         String scheduled;
     }
