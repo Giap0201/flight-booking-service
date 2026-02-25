@@ -14,7 +14,8 @@ public enum ErrorCode {
     EMAIL_EXISTED(1003, "Email already exists", HttpStatus.BAD_REQUEST),
     PHONE_EXISTED(1004, "Phone already exists", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(1005, "User not found", HttpStatus.NOT_FOUND),
-    ROLE_NOT_FOUND(1100, "Role not found", HttpStatus.NOT_FOUND);
+    ROLE_NOT_FOUND(1100, "Role not found", HttpStatus.NOT_FOUND),
+    ROLE_EXISTED(1101, "Role already exists", HttpStatus.BAD_REQUEST);
 
     private int code;
     private String message;

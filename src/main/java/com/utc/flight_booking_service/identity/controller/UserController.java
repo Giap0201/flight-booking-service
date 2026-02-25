@@ -2,6 +2,7 @@ package com.utc.flight_booking_service.identity.controller;
 
 import com.utc.flight_booking_service.common.ApiResponse;
 import com.utc.flight_booking_service.identity.dto.request.UserCreationRequest;
+import com.utc.flight_booking_service.identity.dto.request.UserUpdateRequest;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
 import com.utc.flight_booking_service.identity.service.UserService;
 import lombok.AccessLevel;
@@ -39,13 +40,12 @@ public class UserController {
                 .build();
     }
 
-//    @PutMapping("/{userId}")
-//    ApiResponse<UserResponse> updateUser(@RequestBody UserUpdateRequest request, @PathVariable UUID userId) {
-//
-//        //return
-//        return ApiResponse.<UserResponse>builder().result(userService.updateUser(userId, request))
-//                .build();
-//    }
+    @PutMapping("/{userId}")
+    ApiResponse<UserResponse> updateUser(@RequestBody UserUpdateRequest request, @PathVariable UUID userId) {
+
+        return ApiResponse.<UserResponse>builder().result(userService.updateUser(request, userId))
+                .build();
+    }
 
     @DeleteMapping("/{userId}")
     ApiResponse<String> deleteUser(@PathVariable UUID userId) {

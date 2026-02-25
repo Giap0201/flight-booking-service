@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -17,10 +19,16 @@ public class RoleService {
     RoleRepository roleRepository;
 
     public Role createRole(RoleCreatetionRequest request) {
+        if (roleRepository.existsByName(request.getName()))
+            new AppException(ErrorCode.ROLE_NOT_FOUND);
         Role role = new Role();
         role.setName(request.getName());
         role.setDescription(request.getDescription());
         return roleRepository.save(role);
+    }
+
+    public List<Role> getAll() {
+        return roleRepository.findAll().stream().toList();
     }
 
     public void deleteRole(String Name) {

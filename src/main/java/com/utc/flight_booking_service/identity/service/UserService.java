@@ -2,7 +2,9 @@ package com.utc.flight_booking_service.identity.service;
 
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
+import com.utc.flight_booking_service.identity.domain.entities.Role;
 import com.utc.flight_booking_service.identity.domain.entities.User;
+import com.utc.flight_booking_service.identity.domain.repository.RoleRepository;
 import com.utc.flight_booking_service.identity.domain.repository.UserRepository;
 import com.utc.flight_booking_service.identity.dto.request.UserCreationRequest;
 import com.utc.flight_booking_service.identity.dto.request.UserUpdateRequest;
@@ -14,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +27,7 @@ public class UserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    RoleRepository roleRepository;
 
     public UserResponse addUser(UserCreationRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -33,7 +37,14 @@ public class UserService {
             throw new AppException(ErrorCode.PHONE_EXISTED);
         }
         User user = userMapper.toUser(request);
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        Role role = roleRepository.findByName("USER")
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+        HashSet<Role> roles = new HashSet<>();
+        roles.add(role);
+
+        user.setRoles(roles);
         return userMapper.toUserRespone(userRepository.save(user));
     }
 
@@ -52,7 +63,17 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    public void updateUser(UserUpdateRequest request) {
+    public UserResponse updateUser(UserUpdateRequest request, UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        userMapper.updateUser(user, request);
+
+        var roles = roleRepository.findAllByNameIn(request.getRoles());
+        if (roles.size() != request.getRoles().size()) {
+            throw new AppException(ErrorCode.ROLE_NOT_FOUND);
+        }
+        user.setRoles(new HashSet<>(roles));
+        return userMapper.toUserRespone(userRepository.save(user));
 
     }
 }

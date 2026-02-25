@@ -1,4 +1,4 @@
-package com.utc.flight_booking_service.identity.security;
+package com.utc.flight_booking_service.identity.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

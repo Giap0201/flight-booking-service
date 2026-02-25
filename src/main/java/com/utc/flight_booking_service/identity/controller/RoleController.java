@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/roles")
 @RequiredArgsConstructor
@@ -27,6 +29,13 @@ public class RoleController {
     public ApiResponse<Void> deleteRole(@PathVariable String name) {
         roleService.deleteRole(name);
         return ApiResponse.<Void>builder()
+                .build();
+    }
+
+    @GetMapping
+    ApiResponse<List<Role>> getAll() {
+        return ApiResponse.<List<Role>>builder()
+                .result(roleService.getAll())
                 .build();
     }
 
