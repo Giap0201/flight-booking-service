@@ -1,8 +1,8 @@
 package com.utc.flight_booking_service.inventory.service;
 
 import com.utc.flight_booking_service.inventory.client.AviationstackClient;
-import com.utc.flight_booking_service.inventory.dto.AviationFlightDTO;
-import com.utc.flight_booking_service.inventory.dto.AviationResponseDTO;
+import com.utc.flight_booking_service.inventory.dto.response.AviationFlightDTO;
+import com.utc.flight_booking_service.inventory.dto.response.AviationResponseDTO;
 import com.utc.flight_booking_service.inventory.entity.*;
 import com.utc.flight_booking_service.inventory.mapper.FlightExternalMapper;
 import com.utc.flight_booking_service.inventory.repository.AircraftRepository;

@@ -575,6 +575,18 @@ INSERT INTO airports (code, name, city_code, country_code, timezone, created_at,
 ('NOU', 'La Tontouta International', 'NOU', 'NC', 'Pacific/Noumea', NOW(), NOW()),
 ('VLI', 'Bauerfield International', 'VLI', 'VU', 'Pacific/Efate', NOW(), NOW()),
 ('TBU', 'Fua''amotu International', 'TBU', 'TO', 'Pacific/Tongatapu', NOW(), NOW()),
-('APW', 'Faleolo International', 'APW', 'WS', 'Pacific/Apia', NOW(), NOW())
+('APW', 'Faleolo International', 'APW', 'WS', 'Pacific/Apia', NOW(), NOW()),
+('SIN', 'Changi Airport', 'SIN', 'SG', 'Asia/Singapore', NOW(), NOW())
 
     ON CONFLICT (code) DO NOTHING;
+
+-- Thêm các ông lớn Hàng không
+INSERT INTO airlines (code, name) VALUES
+('AA', 'American Airlines'),
+('DL', 'Delta Air Lines'),
+('UA', 'United Airlines'),
+('EK', 'Emirates'),
+('QR', 'Qatar Airways'),
+('LH', 'Lufthansa'),
+('SQ', 'Singapore Airlines')
+ON CONFLICT (code) DO NOTHING;

@@ -1,7 +1,7 @@
 package com.utc.flight_booking_service.inventory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.utc.flight_booking_service.inventory.dto.AviationResponseDTO;
+import com.utc.flight_booking_service.inventory.dto.response.AviationResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

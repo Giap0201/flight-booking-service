@@ -1,13 +1,14 @@
 package com.utc.flight_booking_service.inventory.mapper;
 
-import com.utc.flight_booking_service.inventory.dto.AviationFlightDTO;
+import com.utc.flight_booking_service.inventory.dto.response.AviationFlightDTO;
+import com.utc.flight_booking_service.inventory.entity.Airline;
+import com.utc.flight_booking_service.inventory.entity.Airport;
 import com.utc.flight_booking_service.inventory.entity.Flight;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.Random;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface FlightExternalMapper {
@@ -24,6 +25,36 @@ public interface FlightExternalMapper {
     @Mapping(target = "destination.code", source = "arrival.iata")
     @Mapping(target = "aviationFlightId", expression = "java(generateAviationId(dto))")
     Flight toEntity(AviationFlightDTO dto);
+
+    @AfterMapping
+    default void fillMissingData(@MappingTarget Flight flight) {
+        String[] TOP_GLOBAL_AIRLINES = {"AA", "DL", "UA", "EK", "QR", "LH", "SQ"};
+
+        String[] TOP_GLOBAL_AIRPORTS = {"ATL", "DXB", "LHR", "HND", "LAX", "SIN", "CDG"};
+
+        Random random = new Random();
+
+        // 1. Nếu API không trả về hãng bay -> Random
+        if (flight.getAirline() == null || flight.getAirline().getCode() == null || flight.getAirline().getCode().trim().isEmpty()) {
+            Airline airline = new Airline();
+            airline.setCode(TOP_GLOBAL_AIRLINES[random.nextInt(TOP_GLOBAL_AIRLINES.length)]);
+            flight.setAirline(airline);
+        }
+
+        // 2. Nếu API không trả về sân bay đi -> Random 1 Hub quốc tế
+        if (flight.getOrigin() == null || flight.getOrigin().getCode() == null || flight.getOrigin().getCode().trim().isEmpty()) {
+            Airport origin = new Airport();
+            origin.setCode(TOP_GLOBAL_AIRPORTS[random.nextInt(TOP_GLOBAL_AIRPORTS.length)]);
+            flight.setOrigin(origin);
+        }
+
+        // 3. Nếu API không trả về sân bay đến -> Random 1 Hub quốc tế
+        if (flight.getDestination() == null || flight.getDestination().getCode() == null || flight.getDestination().getCode().trim().isEmpty()) {
+            Airport dest = new Airport();
+            dest.setCode(TOP_GLOBAL_AIRPORTS[random.nextInt(TOP_GLOBAL_AIRPORTS.length)]);
+            flight.setDestination(dest);
+        }
+    }
 
     default String generateAviationId(AviationFlightDTO dto) {
         if (dto.getAirline() == null || dto.getFlight() == null) return null;

@@ -1,4 +1,4 @@
-package com.utc.flight_booking_service.inventory.dto;
+package com.utc.flight_booking_service.inventory.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

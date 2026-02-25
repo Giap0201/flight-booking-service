@@ -1,7 +1,7 @@
 package com.utc.flight_booking_service.inventory.client;
 
-import com.utc.flight_booking_service.inventory.dto.AviationAirportResponseDTO;
-import com.utc.flight_booking_service.inventory.dto.AviationResponseDTO;
+import com.utc.flight_booking_service.inventory.dto.response.AviationAirportResponseDTO;
+import com.utc.flight_booking_service.inventory.dto.response.AviationResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
