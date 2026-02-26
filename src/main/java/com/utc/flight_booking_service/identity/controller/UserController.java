@@ -5,6 +5,7 @@ import com.utc.flight_booking_service.identity.dto.request.UserCreationRequest;
 import com.utc.flight_booking_service.identity.dto.request.UserUpdateRequest;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
 import com.utc.flight_booking_service.identity.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,7 +22,7 @@ public class UserController {
     UserService userService;
 
     @PostMapping
-    public ApiResponse<UserResponse> createUser(@RequestBody UserCreationRequest request) {
+    public ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.addUser(request))
                 .build();
