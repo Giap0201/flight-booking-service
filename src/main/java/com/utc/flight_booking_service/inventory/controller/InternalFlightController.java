@@ -23,7 +23,16 @@ public class InternalFlightController {
     public ApiResponse<Void> reserveSeats(@RequestBody @Valid SeatReservationRequestDTO request) {
         flightClassService.decreaseSeats(request.getFlightClassId(), request.getAmount());
         return ApiResponse.<Void>builder()
-                .message("Đặt ghế thành công!")
+                .message("Giữ chỗ thành công")
+                .build();
+    }
+
+    @PostMapping("/release-seats")
+    public ApiResponse<Void> releaseSeats(@RequestBody @Valid SeatReservationRequestDTO request) {
+        flightClassService.increaseSeats(request.getFlightClassId(), request.getAmount());
+
+        return ApiResponse.<Void>builder()
+                .message("Hoàn ghế thành công")
                 .build();
     }
 }

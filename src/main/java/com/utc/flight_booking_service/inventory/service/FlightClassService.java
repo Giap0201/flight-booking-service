@@ -37,4 +37,20 @@ public class FlightClassService {
             throw new AppException(ErrorCode.UPDATE_SEAT_FAILED);
         }
     }
+
+    @Transactional
+    @CacheEvict(value = "flight_search", allEntries = true)
+    public void increaseSeats(Long flightClassId, int amount) {
+        FlightClass flightClass = flightClassRepository.findById(flightClassId)
+                .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
+
+        flightClass.setAvailableSeats(flightClass.getAvailableSeats() + amount);
+
+        try {
+            // Version sẽ tự động tăng để tránh ghi đè dữ liệu sai
+            flightClassRepository.saveAndFlush(flightClass);
+        } catch (OptimisticLockingFailureException e) {
+            throw new AppException(ErrorCode.UPDATE_SEAT_FAILED);
+        }
+    }
 }
