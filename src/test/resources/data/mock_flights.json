@@ -1,0 +1,30 @@
+{
+  "data": [
+    {
+      "flight_date": "2026-02-25",
+      "flight_status": "scheduled",
+      "departure": {
+        "airport": "Noi Bai International",
+        "timezone": "Asia/Ho_Chi_Minh",
+        "iata": "HAN",
+        "scheduled": "2026-02-25T10:00:00+00:00"
+      },
+      "arrival": {
+        "airport": "Tan Son Nhat International",
+        "iata": "SGN",
+        "scheduled": "2026-02-25T12:00:00+00:00"
+      },
+      "airline": {
+        "name": "Vietnam Airlines",
+        "iata": "VN"
+      },
+      "flight": {
+        "number": "213",
+        "iata": "VN213"
+      },
+      "aircraft": {
+        "iata": "A321"
+      }
+    }
+  ]
+}

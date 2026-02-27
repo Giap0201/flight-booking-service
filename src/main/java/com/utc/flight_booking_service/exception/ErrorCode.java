@@ -12,7 +12,6 @@ public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(1001, "uncategorized", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_KEY(1002, "Invalid key", HttpStatus.INTERNAL_SERVER_ERROR),
 
-
     //BOOKING (2XXX)
     FLIGHT_ID_REQUIRED(2001, "Flight id required", HttpStatus.BAD_REQUEST),
     FLIGHT_CLASS_ID_REQUIRED(2002, "Flight class id required", HttpStatus.BAD_REQUEST),
@@ -29,6 +28,13 @@ public enum ErrorCode {
 
     CANNOT_CREATE_PNR_CODE(2011, "Can't create pnr code", HttpStatus.INTERNAL_SERVER_ERROR),
     BOOKING_NOT_FOUND(2021, "Booking not found", HttpStatus.NOT_FOUND),
+    //INVENTORY
+    FLIGHT_NOT_FOUND(3000, "Không tìm thấy chuyến bay nào phù hợp", HttpStatus.NOT_FOUND),
+    ORIGIN_REQUIRED(3001, "Điểm đi không được để trống", HttpStatus.BAD_REQUEST),
+    DESTINATION_REQUIRED(3002, "Điểm đến không được để trống", HttpStatus.BAD_REQUEST),
+    DATE_REQUIRED(3003, "Ngày bay không được để trống", HttpStatus.BAD_REQUEST),
+    DATE_INVALID(3004, "Ngày bay phải từ hôm nay trở đi", HttpStatus.BAD_REQUEST),
+    PASSENGERS_INVALID(3005, "Số lượng hành khách ít nhất là 1", HttpStatus.BAD_REQUEST)
     ;
     private int code;
     private String message;
