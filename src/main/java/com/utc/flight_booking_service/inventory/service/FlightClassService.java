@@ -7,6 +7,7 @@ import com.utc.flight_booking_service.inventory.repository.FlightClassRepository
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +19,10 @@ public class FlightClassService {
     FlightClassRepository flightClassRepository;
 
     @Transactional
+    @CacheEvict(value = "flight_search", allEntries = true)
     public void decreaseSeats(Long flightClassId, int amount) {
-        //Tìm hạng ghế
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
-                .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION));
+                .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 
         if (flightClass.getAvailableSeats() < amount) {
             throw new AppException(ErrorCode.NOT_ENOUGH_SEATS);
@@ -30,11 +31,9 @@ public class FlightClassService {
         flightClass.setAvailableSeats(flightClass.getAvailableSeats() - amount);
 
         try {
-            //Lưu lại. Hibernate sẽ so sánh field 'version' tự động
             flightClassRepository.saveAndFlush(flightClass);
         } catch (OptimisticLockingFailureException e) {
-            // THẤT BẠI: Nếu version trong DB khác với version lúc select lên
-            // Ném lỗi về để module Booking biết và báo khách đặt lại
+            // log.error("Concurrency conflict for flightClassId: {}", flightClassId);
             throw new AppException(ErrorCode.UPDATE_SEAT_FAILED);
         }
     }
