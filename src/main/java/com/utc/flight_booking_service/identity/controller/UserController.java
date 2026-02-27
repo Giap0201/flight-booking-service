@@ -1,6 +1,8 @@
 package com.utc.flight_booking_service.identity.controller;
 
 import com.utc.flight_booking_service.common.ApiResponse;
+import com.utc.flight_booking_service.identity.dto.request.AdminPasswordResetRequest;
+import com.utc.flight_booking_service.identity.dto.request.ChangePasswordRequest;
 import com.utc.flight_booking_service.identity.dto.request.UserCreationRequest;
 import com.utc.flight_booking_service.identity.dto.request.UserUpdateRequest;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
@@ -34,6 +36,13 @@ public class UserController {
                 .build();
     }
 
+    @GetMapping("/my-infor")
+    public ApiResponse<UserResponse> getMyInfor() {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getMyInfo())
+                .build();
+    }
+
     @GetMapping("/{userId}")
     ApiResponse<UserResponse> getUser(@PathVariable("userId") UUID userId) {
         return ApiResponse.<UserResponse>builder()
@@ -45,6 +54,22 @@ public class UserController {
     ApiResponse<UserResponse> updateUser(@RequestBody UserUpdateRequest request, @PathVariable UUID userId) {
 
         return ApiResponse.<UserResponse>builder().result(userService.updateUser(request, userId))
+                .build();
+    }
+
+    @PatchMapping("/{userId}/reset-password")
+    ApiResponse<UserResponse> adminResetPassword(@RequestBody @Valid AdminPasswordResetRequest request, @PathVariable UUID userId) {
+
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.resetPasswordByAdmin(userId, request))
+                .build();
+    }
+
+    @PatchMapping("/change-password")
+    ApiResponse<UserResponse> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
+
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.changePassword(request))
                 .build();
     }
 

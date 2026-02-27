@@ -40,7 +40,7 @@ public class JwtUtils {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getEmail())
+                .subject(String.valueOf(user.getId()))
                 .issuer("utc.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(

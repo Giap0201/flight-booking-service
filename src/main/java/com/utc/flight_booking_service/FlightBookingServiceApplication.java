@@ -14,14 +14,14 @@ import java.util.TimeZone;
 @EnableFeignClients
 @EnableScheduling
 public class FlightBookingServiceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(FlightBookingServiceApplication.class, args);
+    }
+
     @PostConstruct
     public void init() {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         System.out.println("Đã đồng bộ múi giờ hệ thống về: " + TimeZone.getDefault().getID());
-    }
-
-    public static void main(String[] args) {
-        SpringApplication.run(FlightBookingServiceApplication.class, args);
     }
 
 }
