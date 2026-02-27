@@ -2,7 +2,9 @@ package com.utc.flight_booking_service.inventory.service;
 
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
+import com.utc.flight_booking_service.inventory.dto.response.SeatReservationResponseDTO;
 import com.utc.flight_booking_service.inventory.entity.FlightClass;
+import com.utc.flight_booking_service.inventory.mapper.FlightClassMapper;
 import com.utc.flight_booking_service.inventory.repository.FlightClassRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class FlightClassService {
     FlightClassRepository flightClassRepository;
+    FlightClassMapper flightClassMapper;
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public void decreaseSeats(Long flightClassId, int amount) {
+    public SeatReservationResponseDTO decreaseSeats(Long flightClassId, int amount) {
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 
@@ -31,24 +34,28 @@ public class FlightClassService {
         flightClass.setAvailableSeats(flightClass.getAvailableSeats() - amount);
 
         try {
-            flightClassRepository.saveAndFlush(flightClass);
+            FlightClass saved = flightClassRepository.saveAndFlush(flightClass);
+            SeatReservationResponseDTO response = flightClassMapper.toReservationResponse(saved);
+            response.setAmountReserved(amount);
+            return response;
         } catch (OptimisticLockingFailureException e) {
-            // log.error("Concurrency conflict for flightClassId: {}", flightClassId);
             throw new AppException(ErrorCode.UPDATE_SEAT_FAILED);
         }
     }
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public void increaseSeats(Long flightClassId, int amount) {
+    public SeatReservationResponseDTO increaseSeats(Long flightClassId, int amount) {
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 
         flightClass.setAvailableSeats(flightClass.getAvailableSeats() + amount);
 
         try {
-            // Version sẽ tự động tăng để tránh ghi đè dữ liệu sai
-            flightClassRepository.saveAndFlush(flightClass);
+            FlightClass saved = flightClassRepository.saveAndFlush(flightClass);
+            SeatReservationResponseDTO response = flightClassMapper.toReservationResponse(saved);
+            response.setAmountReserved(amount);
+            return response;
         } catch (OptimisticLockingFailureException e) {
             throw new AppException(ErrorCode.UPDATE_SEAT_FAILED);
         }
