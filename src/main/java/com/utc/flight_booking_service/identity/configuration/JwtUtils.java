@@ -2,7 +2,11 @@ package com.utc.flight_booking_service.identity.configuration;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import com.utc.flight_booking_service.exception.AppException;
+import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.identity.domain.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -68,27 +73,27 @@ public class JwtUtils {
         return stringJoiner.toString();
     }
 
-//    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
-//        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
-//
-//        SignedJWT signedJWT = SignedJWT.parse(token);
-//
-//        Date expiryTime = (isRefresh)
-//                ? new Date(signedJWT
-//                .getJWTClaimsSet()
-//                .getIssueTime()
-//                .toInstant()
-//                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
-//                .toEpochMilli())
-//                : signedJWT.getJWTClaimsSet().getExpirationTime();
-//
-//        var verified = signedJWT.verify(verifier);
-//
-//        if (!(verified && expiryTime.after(new Date()))) throw new AppException(ErrorCode.UNAUTHENTICATED);
-//
+    public SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+        Date expiryTime = (isRefresh)
+                ? new Date(signedJWT
+                .getJWTClaimsSet()
+                .getIssueTime()
+                .toInstant()
+                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                .toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        var verified = signedJWT.verify(verifier);
+
+        if (!(verified && expiryTime.after(new Date()))) throw new AppException(ErrorCode.UNAUTHENTICATED);
+
 //        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
 //            throw new AppException(ErrorCode.UNAUTHENTICATED);
-//
-//        return signedJWT;
-//    }
+
+        return signedJWT;
+    }
 }
