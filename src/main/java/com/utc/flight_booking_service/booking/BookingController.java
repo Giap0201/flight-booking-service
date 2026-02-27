@@ -7,10 +7,10 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -20,9 +20,18 @@ public class BookingController {
     BookingService bookingService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     ApiResponse<BookingResponse> createBooking(@RequestBody @Valid BookingRequest bookingRequest) {
         return ApiResponse.<BookingResponse>builder()
                 .result(bookingService.createBooking(bookingRequest))
                 .build();
     }
+
+    @GetMapping({"/{id}"})
+    ApiResponse<BookingResponse> getBookingById(@PathVariable UUID id) {
+        return ApiResponse.<BookingResponse>builder()
+                .result(bookingService.getBookingById(id))
+                .build();
+    }
+
 }

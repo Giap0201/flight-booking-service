@@ -30,7 +30,7 @@ public class PriceServiceImpl implements PriceService {
 
     @Override
     public List<Ticket> calculateTickets(Booking booking,
-                                         List<BookingFlightRequest> bookingFlightRequests) { // Bỏ tham số PassengerRequest đi
+                                         List<BookingFlightRequest> bookingFlightRequests) {
 
         List<Ticket> tickets = new ArrayList<>();
         for (BookingFlightRequest fReq : bookingFlightRequests) {
@@ -41,7 +41,7 @@ public class PriceServiceImpl implements PriceService {
 
             for (Passenger p : booking.getPassengers()) {
                 PassengerType type = PassengerUtils.calculatePassengerType(p.getDateOfBirth(), LocalDateTime.now());
-
+                p.setType(type);
                 BigDecimal finalBaseFare = applyAgePolicy(baseFare, type);
                 BigDecimal taxAmount = finalBaseFare.multiply(taxRate);
                 BigDecimal totalAmount = finalBaseFare.add(taxAmount);

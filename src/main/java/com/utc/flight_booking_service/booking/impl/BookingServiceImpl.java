@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -48,7 +49,6 @@ public class BookingServiceImpl implements BookingService {
         String pnrCode = handlePnrCode();
         booking.setStatus(BookingStatus.PENDING);
         booking.setPnrCode(pnrCode);
-        booking.setTotalAmount(new BigDecimal(10000));
         booking.setExpireAt(LocalDateTime.now().plusMinutes(10));
 
         request.getPassengers().forEach(passenger -> {
@@ -63,9 +63,24 @@ public class BookingServiceImpl implements BookingService {
         }
 
         List<Ticket> tickets = priceService.calculateTickets(booking, request.getFlights());
+
+        BigDecimal totalBookingAmount = tickets.stream().map(Ticket::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalFare = tickets.stream().map(Ticket::getBaseFare).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalTax = tickets.stream().map(Ticket::getTaxAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        booking.setTotalAmount(totalBookingAmount);
+        booking.setTotalFareAmount(totalFare);
+        booking.setTotalTaxAmount(totalTax);
         tickets.forEach(booking::addTicket);
         Booking savedBooking = bookingRepository.save(booking);
         return bookingMapper.toBookingResponse(savedBooking);
+    }
+
+    @Override
+    public BookingResponse getBookingById(UUID id) {
+        Booking booking = bookingRepository.findById(id).orElseThrow(() ->
+                new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        return bookingMapper.toBookingResponse(booking);
     }
 
     private String handlePnrCode() {

@@ -28,6 +28,7 @@ public enum ErrorCode {
     PASSENGER_TYPE_REQUIRED(2010, "Passenger type required", HttpStatus.BAD_REQUEST),
 
     CANNOT_CREATE_PNR_CODE(2011, "Can't create pnr code", HttpStatus.INTERNAL_SERVER_ERROR),
+    BOOKING_NOT_FOUND(2021, "Booking not found", HttpStatus.NOT_FOUND),
     ;
     private int code;
     private String message;
