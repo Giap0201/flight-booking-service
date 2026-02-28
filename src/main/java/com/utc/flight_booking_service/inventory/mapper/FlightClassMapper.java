@@ -21,5 +21,8 @@ public interface FlightClassMapper {
 
     @Mapping(target = "flightClassId", source = "id")
     @Mapping(target = "flightId", source = "flight.id")
+    @Mapping(source = "flight.flightNumber", target = "flightNumber")
+    @Mapping(source = "flight.departureTime", target = "departureTime")
+    @Mapping(source = "flight.arrivalTime", target = "arrivalTime")
     FlightPriceResponseDTO toFlightPriceResponseDTO(FlightClass flightClass);
 }

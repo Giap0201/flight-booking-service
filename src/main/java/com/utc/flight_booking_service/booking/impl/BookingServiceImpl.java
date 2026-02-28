@@ -18,6 +18,7 @@ import com.utc.flight_booking_service.booking.response.BookingResponse;
 import com.utc.flight_booking_service.booking.utils.PnrGenerator;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
+import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
 import com.utc.flight_booking_service.inventory.service.FlightClassService;
 import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import jakarta.transaction.Transactional;
@@ -65,8 +66,13 @@ public class BookingServiceImpl implements BookingService {
         });
 
         for (int i = 0; i < request.getFlights().size(); i++) {
+            BookingFlightRequest fReq = request.getFlights().get(i);
             BookingFlight bookingFlight = bookingFlightMapper.toBookingFlight(request.getFlights().get(i));
+            FlightPriceResponseDTO flightInfo = flightClassService.getFlightPrice(fReq.getFlightClassId());
             bookingFlight.setSegmentNo(i + 1);
+            bookingFlight.setOriginFlightNumber(flightInfo.getFlightNumber());
+            bookingFlight.setOriginDepartureTime(flightInfo.getDepartureTime());
+            bookingFlight.setOriginArrivalTime(flightInfo.getArrivalTime());
             booking.addBookingFlight(bookingFlight);
         }
 
