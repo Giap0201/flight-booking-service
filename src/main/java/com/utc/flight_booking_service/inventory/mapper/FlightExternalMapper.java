@@ -4,19 +4,20 @@ import com.utc.flight_booking_service.inventory.dto.response.AviationFlightDTO;
 import com.utc.flight_booking_service.inventory.entity.Airline;
 import com.utc.flight_booking_service.inventory.entity.Airport;
 import com.utc.flight_booking_service.inventory.entity.Flight;
+import com.utc.flight_booking_service.inventory.entity.FlightStatus;
 import org.mapstruct.*;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Random;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", imports = FlightStatus.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface FlightExternalMapper {
     static final int DAYS_TO_SHIFT = 30;
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "flightNumber", source = "flight.iata")
-    @Mapping(target = "status", constant = "SCHEDULED")
+    @Mapping(target = "status", expression = "java(FlightStatus.SCHEDULED)")
     @Mapping(target = "departureTime", source = "departure.scheduled")
     @Mapping(target = "arrivalTime", source = "arrival.scheduled")
     @Mapping(target = "airline.code", source = "airline.iata")

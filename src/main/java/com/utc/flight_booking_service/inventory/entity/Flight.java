@@ -20,8 +20,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Flight extends BaseTimeEntity{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    String id;
 
     @Column(unique = true, length = 100)
     String aviationFlightId;                //ID gốc từ Aviationstack
@@ -46,7 +46,9 @@ public class Flight extends BaseTimeEntity{
 
     LocalDateTime departureTime;
     LocalDateTime arrivalTime;
-    String status; //SCHEDULED, DELAYED, CANCELLED
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    FlightStatus status;
 
     @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<FlightClass> flightClasses;

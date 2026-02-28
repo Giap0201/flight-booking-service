@@ -2,6 +2,7 @@ package com.utc.flight_booking_service.inventory.repository;
 
 import com.utc.flight_booking_service.inventory.entity.Flight;
 import com.utc.flight_booking_service.inventory.entity.FlightClass;
+import com.utc.flight_booking_service.inventory.entity.FlightStatus;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -47,7 +48,7 @@ public class FlightSpecification {
             }
 
             // 5. Chỉ hiển thị các chuyến bay có trạng thái SCHEDULED
-            predicates.add(criteriaBuilder.equal(root.get("status"), "SCHEDULED"));
+            predicates.add(criteriaBuilder.equal(root.get("status"), FlightStatus.SCHEDULED));
 
             // Gộp tất cả điều kiện lại bằng toán tử AND
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

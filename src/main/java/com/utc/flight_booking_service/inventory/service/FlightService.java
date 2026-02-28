@@ -8,6 +8,7 @@ import com.utc.flight_booking_service.inventory.dto.response.FlightUpdateRespons
 import com.utc.flight_booking_service.inventory.dto.response.PriceUpdateResponseDTO;
 import com.utc.flight_booking_service.inventory.entity.Flight;
 import com.utc.flight_booking_service.inventory.entity.FlightClass;
+import com.utc.flight_booking_service.inventory.entity.FlightStatus;
 import com.utc.flight_booking_service.inventory.mapper.FlightClassMapper;
 import com.utc.flight_booking_service.inventory.mapper.FlightMapper;
 import com.utc.flight_booking_service.inventory.repository.FlightClassRepository;
@@ -22,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class FlightService {
+public class FlightService implements IFlightService{
     FlightRepository flightRepository;
     FlightClassRepository flightClassRepository;
     FlightMapper flightMapper;
@@ -30,20 +31,20 @@ public class FlightService {
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public FlightUpdateResponseDTO updateFlightStatus(Long flightId, FlightUpdateRequestDTO request) {
+    public FlightUpdateResponseDTO updateFlightStatus(String flightId, FlightUpdateRequestDTO request) {
         Flight flight = flightRepository.findById(flightId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 
         if (request.getDepartureTime() != null) flight.setDepartureTime(request.getDepartureTime());
         if (request.getArrivalTime() != null) flight.setArrivalTime(request.getArrivalTime());
-        if (request.getStatus() != null) flight.setStatus(request.getStatus());
+        if (request.getStatus() != null) flight.setStatus(FlightStatus.valueOf(request.getStatus().toUpperCase()));
 
         return flightMapper.toUpdateResponse(flightRepository.save(flight));
     }
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public PriceUpdateResponseDTO updatePrice(Long flightClassId, PriceUpdateRequestDTO request) {
+    public PriceUpdateResponseDTO updatePrice(String flightClassId, PriceUpdateRequestDTO request) {
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
                 .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION));
 

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface FlightRepository extends JpaRepository<Flight, Long>, JpaSpecificationExecutor<Flight> {
+public interface FlightRepository extends JpaRepository<Flight, String>, JpaSpecificationExecutor<Flight> {
     Optional<Flight> findByAviationFlightId(String aviationFlightId);
 
     @EntityGraph(attributePaths = {"flightClasses", "airline"})

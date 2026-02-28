@@ -17,15 +17,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class FlightConcurrencyTest {
 
     @Autowired
-    FlightClassService flightClassService;
+    IFlightClassService flightClassService;
 
     @Autowired
     FlightClassRepository flightClassRepository;
 
     @Test
     void testOptimisticLocking_ShouldFailForOneThread() throws InterruptedException {
-        // 1. Chuẩn bị dữ liệu: Lấy một hạng ghế đang có 100 chỗ
-        Long targetId = 1L; // Thay bằng ID thực tế trong DB của bạn
+        // 1. Chuẩn bị  dữ liệu: Lấy một hạng ghế đang có 100 chỗ
+        String targetId = "87a7c31f-2ade-4729-a7e6-9070c5467f2d"; // Thay bằng ID thực tế trong DB của bạn
         int initialSeats = 100;
 
         // 2. Thiết lập công cụ điều phối luồng

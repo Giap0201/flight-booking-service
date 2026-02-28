@@ -1,5 +1,6 @@
 package com.utc.flight_booking_service.inventory.mapper;
 
+import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.PriceUpdateResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.SeatReservationResponseDTO;
 import com.utc.flight_booking_service.inventory.entity.FlightClass;
@@ -17,4 +18,8 @@ public interface FlightClassMapper {
     @Mapping(target = "availableSeatsLeft", source = "availableSeats")
     @Mapping(target = "amountReserved", ignore = true) // Sẽ set thủ công trong Service
     SeatReservationResponseDTO toReservationResponse(FlightClass flightClass);
+
+    @Mapping(target = "flightClassId", source = "id")
+    @Mapping(target = "flightId", source = "flight.id")
+    FlightPriceResponseDTO toFlightPriceResponseDTO(FlightClass flightClass);
 }

@@ -22,7 +22,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class FlightSyncService {
+public class FlightSyncService implements IFlightSyncService{
     AviationstackClient aviationClient;
     FlightExternalMapper flightMapper;
     FlightEnrichmentService enrichmentService;
@@ -55,7 +55,7 @@ public class FlightSyncService {
                 if (existingFlightOpt.isPresent()) {
                     // CẬP NHẬT (UPSERT)
                     Flight existingFlight = existingFlightOpt.get();
-                    existingFlight.setStatus(dto.getFlightStatus());
+                    existingFlight.setStatus(FlightStatus.valueOf(dto.getFlightStatus().toUpperCase()));
 
                     flightRepository.save(existingFlight);
                     successCount++;

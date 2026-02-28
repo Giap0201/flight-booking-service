@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -13,6 +14,6 @@ import java.io.Serializable;
 public class FlightClassDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     String className;
-    Double basePrice;
+    BigDecimal basePrice;
     Integer availableSeats;
 }

@@ -2,6 +2,7 @@ package com.utc.flight_booking_service.inventory.service;
 
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
+import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.SeatReservationResponseDTO;
 import com.utc.flight_booking_service.inventory.entity.FlightClass;
 import com.utc.flight_booking_service.inventory.mapper.FlightClassMapper;
@@ -17,13 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class FlightClassService {
+public class FlightClassService implements IFlightClassService{
     FlightClassRepository flightClassRepository;
     FlightClassMapper flightClassMapper;
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public SeatReservationResponseDTO decreaseSeats(Long flightClassId, int amount) {
+    public SeatReservationResponseDTO decreaseSeats(String flightClassId, int amount) {
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 
@@ -45,7 +46,7 @@ public class FlightClassService {
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public SeatReservationResponseDTO increaseSeats(Long flightClassId, int amount) {
+    public SeatReservationResponseDTO increaseSeats(String flightClassId, int amount) {
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 
@@ -59,5 +60,13 @@ public class FlightClassService {
         } catch (OptimisticLockingFailureException e) {
             throw new AppException(ErrorCode.UPDATE_SEAT_FAILED);
         }
+    }
+
+    @Override
+    public FlightPriceResponseDTO getFlightPrice(String flightClassId) {
+        FlightClass flightClass = flightClassRepository.findById(flightClassId)
+                .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
+
+        return flightClassMapper.toFlightPriceResponseDTO(flightClass);
     }
 }

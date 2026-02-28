@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FlightUpdateResponseDTO {
-    Long id;
+    String id;
     String status;
     LocalDateTime departureTime;
     LocalDateTime arrivalTime;

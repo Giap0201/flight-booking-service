@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SeatReservationRequestDTO {
     @NotNull(message = "FLIGHT_CLASS_ID_REQUIRED")
-    Long flightClassId;
+    String flightClassId;
 
     @Min(value = 1, message = "MIN_SEAT_RESERVATION")
     int amount;
