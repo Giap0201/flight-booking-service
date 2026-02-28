@@ -5,7 +5,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Entity
 @Table(name = "flight_classes", uniqueConstraints = {
@@ -20,14 +19,15 @@ import java.util.UUID;
 public class FlightClass extends BaseTimeEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    UUID id;
+    String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "flight_id")
     Flight flight;
 
-    @Column(length = 20)
-    String classType; //ECONOMY, BUSINESS
+    @Enumerated(EnumType.STRING) // Quan trọng: Lưu dạng Text xuống DB thay vì số (0, 1, 2)
+    @Column(name = "class_type", length = 20)
+    FlightClassType classType;
 
     BigDecimal basePrice;
     Double taxPercentage;

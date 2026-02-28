@@ -53,10 +53,13 @@ public enum ErrorCode {
     DESTINATION_REQUIRED(3002, "Điểm đến không được để trống", HttpStatus.BAD_REQUEST),
     DATE_REQUIRED(3003, "Ngày bay không được để trống", HttpStatus.BAD_REQUEST),
     DATE_INVALID(3004, "Ngày bay phải từ hôm nay trở đi", HttpStatus.BAD_REQUEST),
-    PASSENGERS_INVALID(3005, "Số lượng hành khách ít nhất là 1", HttpStatus.BAD_REQUEST);
-
-
-    private int code;
-    private String message;
-    private HttpStatusCode httpStatusCode;
+    PASSENGERS_INVALID(3005, "Số lượng hành khách ít nhất là 1", HttpStatus.BAD_REQUEST),
+    UPDATE_SEAT_FAILED(3006, "Ghế đang được người khác đặt, vui lòng thử lại", HttpStatus.CONFLICT),
+    NOT_ENOUGH_SEATS(3007, "Không đủ số lượng ghế trống", HttpStatus.BAD_REQUEST),
+    MIN_SEAT_RESERVATION(3009, "Số lượng ghế đặt phải ít nhất là 1", HttpStatus.BAD_REQUEST),
+    INVALID_PRICE(3010, "Giá vé không được nhỏ hơn 0", HttpStatus.BAD_REQUEST)
+    ;
+    private final int code;
+    private final String message;
+    private final HttpStatusCode httpStatusCode;
 }

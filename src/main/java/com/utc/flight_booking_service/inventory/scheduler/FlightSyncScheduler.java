@@ -1,6 +1,6 @@
 package com.utc.flight_booking_service.inventory.scheduler;
 
-import com.utc.flight_booking_service.inventory.service.FlightSyncService;
+import com.utc.flight_booking_service.inventory.service.IFlightSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class FlightSyncScheduler {
 
-    private final FlightSyncService flightSyncService;
+    private final IFlightSyncService flightSyncService;
 
     // Chay moi 1 phut
 //    @Scheduled(cron = "0 * * * * ?")
