@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface BookingService {
     BookingResponse createBooking(BookingRequest request);
     BookingResponse getBookingById (UUID id);
+
+    void cancelExpiredBookings();
 }

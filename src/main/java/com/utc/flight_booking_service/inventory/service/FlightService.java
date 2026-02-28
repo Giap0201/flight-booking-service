@@ -20,6 +20,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -31,7 +33,7 @@ public class FlightService implements IFlightService{
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public FlightUpdateResponseDTO updateFlightStatus(String flightId, FlightUpdateRequestDTO request) {
+    public FlightUpdateResponseDTO updateFlightStatus(UUID flightId, FlightUpdateRequestDTO request) {
         Flight flight = flightRepository.findById(flightId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 
@@ -44,7 +46,7 @@ public class FlightService implements IFlightService{
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public PriceUpdateResponseDTO updatePrice(String flightClassId, PriceUpdateRequestDTO request) {
+    public PriceUpdateResponseDTO updatePrice(UUID flightClassId, PriceUpdateRequestDTO request) {
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
                 .orElseThrow(() -> new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION));
 

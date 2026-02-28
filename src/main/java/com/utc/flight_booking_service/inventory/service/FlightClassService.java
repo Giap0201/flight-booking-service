@@ -15,6 +15,8 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -24,7 +26,7 @@ public class FlightClassService implements IFlightClassService{
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public SeatReservationResponseDTO decreaseSeats(String flightClassId, int amount) {
+    public SeatReservationResponseDTO decreaseSeats(UUID flightClassId, int amount) {
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 
@@ -46,7 +48,7 @@ public class FlightClassService implements IFlightClassService{
 
     @Transactional
     @CacheEvict(value = "flight_search", allEntries = true)
-    public SeatReservationResponseDTO increaseSeats(String flightClassId, int amount) {
+    public SeatReservationResponseDTO increaseSeats(UUID flightClassId, int amount) {
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 
@@ -63,7 +65,7 @@ public class FlightClassService implements IFlightClassService{
     }
 
     @Override
-    public FlightPriceResponseDTO getFlightPrice(String flightClassId) {
+    public FlightPriceResponseDTO getFlightPrice(UUID flightClassId) {
         FlightClass flightClass = flightClassRepository.findById(flightClassId)
                 .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
 

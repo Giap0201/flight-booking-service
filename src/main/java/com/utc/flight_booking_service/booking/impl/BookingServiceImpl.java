@@ -8,14 +8,18 @@ import com.utc.flight_booking_service.booking.entity.BookingFlight;
 import com.utc.flight_booking_service.booking.entity.Passenger;
 import com.utc.flight_booking_service.booking.entity.Ticket;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
+import com.utc.flight_booking_service.booking.enums.TicketStatus;
 import com.utc.flight_booking_service.booking.mapper.BookingFlightMapper;
 import com.utc.flight_booking_service.booking.mapper.BookingMapper;
 import com.utc.flight_booking_service.booking.mapper.PassengerMapper;
+import com.utc.flight_booking_service.booking.request.BookingFlightRequest;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
 import com.utc.flight_booking_service.booking.utils.PnrGenerator;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
+import com.utc.flight_booking_service.inventory.service.FlightClassService;
+import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -39,12 +43,16 @@ public class BookingServiceImpl implements BookingService {
     PassengerMapper passengerMapper;
     BookingFlightMapper bookingFlightMapper;
     PriceService priceService;
+    IFlightClassService flightClassService;
 
     @Override
     public BookingResponse createBooking(BookingRequest request) {
-        // check ghe trong
-//        flightService.reserveSeats(request.getFlightId(), request.getPassengers().size());
+        int totalPassengers = request.getPassengers().size();
 
+        // Kiem tra va giu ghe (be1)
+        for (BookingFlightRequest bookingFlightRequest : request.getFlights() ) {
+            flightClassService.decreaseSeats(bookingFlightRequest.getFlightClassId(), totalPassengers);
+        }
         Booking booking = bookingMapper.toBooking(request);
         String pnrCode = handlePnrCode();
         booking.setStatus(BookingStatus.PENDING);
@@ -81,6 +89,33 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(id).orElseThrow(() ->
                 new AppException(ErrorCode.BOOKING_NOT_FOUND));
         return bookingMapper.toBookingResponse(booking);
+    }
+
+    @Override
+    public void cancelExpiredBookings() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Booking> expiredBookings = bookingRepository.findByStatusAndExpireAtBefore(BookingStatus.PENDING, now);
+        if(expiredBookings.isEmpty()) {
+            log.info("Không có booking quá hạn");
+            return;
+        }
+        log.info("Tìm thấy {} booking quá hạn, bắt đầu huỷ", expiredBookings.size());
+
+        for (Booking booking : expiredBookings) {
+            booking.setStatus(BookingStatus.CANCELLED);
+            booking.getTickets().forEach(ticket -> {
+                ticket.setStatus(TicketStatus.CANCELLED);
+            });
+            int totalPassengers = booking.getPassengers().size();
+            for (BookingFlight bookingFlight : booking.getBookingFlights()){
+                try {
+                    flightClassService.increaseSeats(bookingFlight.getFlightClassId(), totalPassengers);
+                    log.info("Đã trả lại {} ghế cho chuyến bay {}", totalPassengers, bookingFlight.getFlightClassId());
+                }catch (AppException e) {
+                    log.error("Lỗi khi trả ghế cho chuyến bay {}: {}", bookingFlight.getFlightClassId(), e.getMessage());
+                }
+            }
+        }
     }
 
     private String handlePnrCode() {

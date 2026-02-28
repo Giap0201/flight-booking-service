@@ -5,7 +5,9 @@ import com.utc.flight_booking_service.inventory.dto.request.PriceUpdateRequestDT
 import com.utc.flight_booking_service.inventory.dto.response.FlightUpdateResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.PriceUpdateResponseDTO;
 
+import java.util.UUID;
+
 public interface IFlightService {
-    FlightUpdateResponseDTO updateFlightStatus(String flightId, FlightUpdateRequestDTO request);
-    PriceUpdateResponseDTO updatePrice(String flightClassId, PriceUpdateRequestDTO request);
+    FlightUpdateResponseDTO updateFlightStatus(UUID flightId, FlightUpdateRequestDTO request);
+    PriceUpdateResponseDTO updatePrice(UUID flightClassId, PriceUpdateRequestDTO request);
 }

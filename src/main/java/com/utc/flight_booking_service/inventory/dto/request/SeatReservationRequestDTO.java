@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -12,7 +14,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SeatReservationRequestDTO {
     @NotNull(message = "FLIGHT_CLASS_ID_REQUIRED")
-    String flightClassId;
+    UUID flightClassId;
 
     @Min(value = 1, message = "MIN_SEAT_RESERVATION")
     int amount;

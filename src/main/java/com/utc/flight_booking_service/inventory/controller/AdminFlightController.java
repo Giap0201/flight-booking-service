@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/v1/admin/flights")
 @RequiredArgsConstructor
@@ -21,7 +23,7 @@ public class AdminFlightController {
 
     // API Cập nhật giờ bay hoặc Hủy chuyến
     @PatchMapping("/{id}")
-    public ApiResponse<FlightUpdateResponseDTO> updateFlight(@PathVariable String id, @RequestBody FlightUpdateRequestDTO request) {
+    public ApiResponse<FlightUpdateResponseDTO> updateFlight(@PathVariable UUID id, @RequestBody FlightUpdateRequestDTO request) {
         return ApiResponse.<FlightUpdateResponseDTO>builder()
                 .message("Cập nhật thông tin chuyến bay thành công")
                 .result(flightService.updateFlightStatus(id, request))
@@ -29,7 +31,7 @@ public class AdminFlightController {
     }
 
     @PutMapping("/prices/{flightClassId}")
-    public ApiResponse<PriceUpdateResponseDTO> updatePrice(@PathVariable String flightClassId,
+    public ApiResponse<PriceUpdateResponseDTO> updatePrice(@PathVariable UUID flightClassId,
                                                            @RequestBody @Valid PriceUpdateRequestDTO request) {
         return ApiResponse.<PriceUpdateResponseDTO>builder()
                 .message("Cập nhật giá vé thành công")
