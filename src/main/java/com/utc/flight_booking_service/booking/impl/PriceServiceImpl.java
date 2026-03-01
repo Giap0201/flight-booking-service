@@ -38,7 +38,7 @@ public class PriceServiceImpl implements PriceService {
 
         List<Ticket> tickets = new ArrayList<>();
         for (BookingFlightRequest fReq : bookingFlightRequests) {
-            FlightPriceResponseDTO priceInfo = flightClassService.getFlightPrice(fReq.getFlightId());
+            FlightPriceResponseDTO priceInfo = flightClassService.getFlightPrice(fReq.getFlightClassId());
 
             BigDecimal baseFare = priceInfo.getBasePrice();
             BigDecimal taxRate = BigDecimal.valueOf(priceInfo.getTaxPercentage());
