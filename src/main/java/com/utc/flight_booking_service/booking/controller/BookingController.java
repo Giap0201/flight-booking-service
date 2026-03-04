@@ -1,7 +1,8 @@
-package com.utc.flight_booking_service.booking;
+package com.utc.flight_booking_service.booking.controller;
 
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
+import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;

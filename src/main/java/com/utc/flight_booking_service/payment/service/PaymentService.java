@@ -1,8 +1,8 @@
 package com.utc.flight_booking_service.payment.service;
 
 
-import com.utc.flight_booking_service.booking.BookingRepository;
-import com.utc.flight_booking_service.booking.BookingService;
+import com.utc.flight_booking_service.booking.repository.BookingRepository;
+import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.payment.config.VNPayConfig;

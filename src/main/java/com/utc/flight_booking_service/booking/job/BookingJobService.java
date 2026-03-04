@@ -1,6 +1,6 @@
 package com.utc.flight_booking_service.booking.job;
 
-import com.utc.flight_booking_service.booking.BookingService;
+import com.utc.flight_booking_service.booking.service.BookingService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

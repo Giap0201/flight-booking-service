@@ -1,4 +1,4 @@
-package com.utc.flight_booking_service.booking;
+package com.utc.flight_booking_service.booking.service;
 
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.entity.Ticket;

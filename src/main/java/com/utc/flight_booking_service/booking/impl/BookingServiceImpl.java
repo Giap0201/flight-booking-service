@@ -1,8 +1,8 @@
 package com.utc.flight_booking_service.booking.impl;
 
-import com.utc.flight_booking_service.booking.BookingRepository;
-import com.utc.flight_booking_service.booking.BookingService;
-import com.utc.flight_booking_service.booking.PriceService;
+import com.utc.flight_booking_service.booking.repository.BookingRepository;
+import com.utc.flight_booking_service.booking.service.BookingService;
+import com.utc.flight_booking_service.booking.service.PriceService;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.entity.BookingFlight;
 import com.utc.flight_booking_service.booking.entity.Passenger;
