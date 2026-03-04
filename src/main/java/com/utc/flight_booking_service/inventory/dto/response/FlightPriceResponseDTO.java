@@ -18,6 +18,8 @@ public class FlightPriceResponseDTO {
     BigDecimal basePrice;
     Double taxPercentage;
     String flightNumber;
+    String origin;
+    String destination;
     LocalDateTime departureTime;
     LocalDateTime arrivalTime;
 }

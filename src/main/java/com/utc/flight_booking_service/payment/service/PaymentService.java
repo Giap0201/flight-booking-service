@@ -1,10 +1,9 @@
 package com.utc.flight_booking_service.payment.service;
 
 
-import com.utc.flight_booking_service.booking.repository.BookingRepository;
-import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
+import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.payment.config.VNPayConfig;
 import com.utc.flight_booking_service.payment.entity.Transaction;
 import com.utc.flight_booking_service.payment.enums.PaymentStatus;
@@ -27,7 +26,6 @@ public class PaymentService {
 
     private final BookingService bookingService;
     private final TransactionRepository transactionRepository;
-    private final BookingRepository bookingRepository;
 
     @Value("${vnpay.tmn-code}")
     private String vnpTmnCode;
@@ -184,12 +182,11 @@ public class PaymentService {
                         .status(PaymentStatus.SUCCESS)
                         .build();
                 transactionRepository.save(transaction);
-
-                booking.setStatus(BookingStatus.CONFIRMED);
-                bookingRepository.save(booking);
+                bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
+                bookingService.issueTicketsForBooking(booking.getId());
             } else {
                 booking.setStatus(BookingStatus.CANCELLED);
-                bookingRepository.save(booking);
+                bookingService.updateBookingStatus(booking.getId(), BookingStatus.CANCELLED);
             }
 
             response.put("RspCode", "00");
@@ -222,7 +219,7 @@ public class PaymentService {
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
 //                return "http://localhost:3000/payment-success?pnr=" + pnrCode;
-                                return "http://localhost:3000";
+                return "http://localhost:3000";
 
             } else {
                 return "http://localhost:3000/payment-failed?pnr=" + pnrCode;

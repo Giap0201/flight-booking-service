@@ -9,5 +9,4 @@ import java.util.List;
 public interface PriceService {
     List<Ticket> calculateTickets(Booking booking,
                                   List<BookingFlightRequest> bookingFlightRequests);
-
 }

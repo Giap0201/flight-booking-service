@@ -1,8 +1,5 @@
-package com.utc.flight_booking_service.booking.impl;
+package com.utc.flight_booking_service.booking.service;
 
-import com.utc.flight_booking_service.booking.repository.BookingRepository;
-import com.utc.flight_booking_service.booking.service.BookingService;
-import com.utc.flight_booking_service.booking.service.PriceService;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.entity.BookingFlight;
 import com.utc.flight_booking_service.booking.entity.Passenger;
@@ -12,10 +9,13 @@ import com.utc.flight_booking_service.booking.enums.TicketStatus;
 import com.utc.flight_booking_service.booking.mapper.BookingFlightMapper;
 import com.utc.flight_booking_service.booking.mapper.BookingMapper;
 import com.utc.flight_booking_service.booking.mapper.PassengerMapper;
+import com.utc.flight_booking_service.booking.repository.BookingRepository;
+import com.utc.flight_booking_service.booking.repository.TicketRepository;
 import com.utc.flight_booking_service.booking.request.BookingFlightRequest;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
-import com.utc.flight_booking_service.booking.utils.PnrGenerator;
+import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
+import com.utc.flight_booking_service.booking.utils.GeneratorCode;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
@@ -29,8 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -39,6 +38,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookingServiceImpl implements BookingService {
     BookingRepository bookingRepository;
+    TicketRepository ticketRepository;
     BookingMapper bookingMapper;
     PassengerMapper passengerMapper;
     BookingFlightMapper bookingFlightMapper;
@@ -91,8 +91,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingResponse getBookingById(UUID id) {
-        Booking booking = bookingRepository.findById(id).orElseThrow(() ->
-                new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        Booking booking = bookingRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
         return bookingMapper.toBookingResponse(booking);
     }
 
@@ -125,21 +124,67 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking getBookingEntityByPnr(String pnrCode) {
-        return bookingRepository.findByPnrCode(pnrCode).orElseThrow(() ->
-                new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        return bookingRepository.findByPnrCode(pnrCode).orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
     }
 
     @Override
     public Booking getBookingEntityById(UUID id) {
-        return bookingRepository.findById(id).orElseThrow(() ->
-                new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        return bookingRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+    }
+
+    @Override
+    public void updateBookingStatus(UUID id, BookingStatus status) {
+        Booking booking = getBookingEntityById(id);
+        booking.setStatus(status);
+    }
+
+    @Override
+    public void issueTicketsForBooking(UUID bookingId) {
+        Booking booking = getBookingEntityById(bookingId);
+        if (booking.getTickets().stream().anyMatch(t -> t.getStatus() == TicketStatus.ISSUED)) {
+            log.warn("Booking {} đã được xuất vé từ trước!", bookingId);
+            return;
+        }
+        for (Ticket ticket : booking.getTickets()) {
+            if (ticket.getStatus() == TicketStatus.RESERVED) {
+                Long sequence = ticketRepository.getNextTicketSequence();
+                String ticketNumber = "738" + String.format("%010d", sequence);
+                ticket.setTicketNumber(ticketNumber);
+                ticket.setStatus(TicketStatus.ISSUED);
+            }
+        }
+        bookingRepository.save(booking);
+        log.info("Đã xuất vé thành công cho Booking: {}", booking.getPnrCode());
+    }
+
+    @Override
+    public List<ClientETicketResponse> getTicketsByBookingId(UUID bookingId) {
+        Booking booking = getBookingEntityById(bookingId);
+
+        if (booking.getStatus() == BookingStatus.PENDING) {
+            throw new AppException(ErrorCode.BOOKING_NOT_PAID_YET);
+        }
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new AppException(ErrorCode.BOOKING_CANCELLED);
+        }
+        Map<UUID, FlightPriceResponseDTO> flightCache = new HashMap<>();
+        List<ClientETicketResponse> responses = new ArrayList<>();
+        for (Ticket ticket : booking.getTickets()) {
+            UUID classId = ticket.getFlightClassId();
+            // Nếu trong Map chưa có -> Gọi BE1. Nếu có rồi -> Lấy luôn từ Map
+            FlightPriceResponseDTO flightInfo = flightCache.computeIfAbsent(classId, flightClassService::getFlightPrice);
+
+            responses.add(ClientETicketResponse.builder().ticketNumber(ticket.getTicketNumber()).pnrCode(booking.getPnrCode()).status(ticket.getStatus()).passengerFullName(ticket.getPassenger().getFirstName() + " " + ticket.getPassenger().getLastName()).passengerType(ticket.getPassenger().getType()).flightNumber(flightInfo.getFlightNumber()).origin(flightInfo.getOrigin()).destination(flightInfo.getDestination()).totalAmount(ticket.getTotalAmount()).build());
+        }
+
+        return responses;
     }
 
     private String handlePnrCode() {
         String pnrCode;
         int counter = 0;
         do {
-            pnrCode = PnrGenerator.generatePnr();
+            pnrCode = GeneratorCode.generatePnr();
             counter++;
             if (!bookingRepository.existsByPnrCode(pnrCode)) return pnrCode;
             if (counter > 5) throw new AppException(ErrorCode.CANNOT_CREATE_PNR_CODE);

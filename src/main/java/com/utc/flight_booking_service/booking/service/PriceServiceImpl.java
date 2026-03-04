@@ -1,6 +1,5 @@
-package com.utc.flight_booking_service.booking.impl;
+package com.utc.flight_booking_service.booking.service;
 
-import com.utc.flight_booking_service.booking.service.PriceService;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.entity.Passenger;
 import com.utc.flight_booking_service.booking.entity.Ticket;
@@ -62,6 +61,7 @@ public class PriceServiceImpl implements PriceService {
                         .status(TicketStatus.RESERVED)
                         .discountAmount(discountAmount)
                         .build();
+
 
                 tickets.add(ticket);
             }
