@@ -19,7 +19,6 @@ import com.utc.flight_booking_service.booking.utils.PnrGenerator;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
-import com.utc.flight_booking_service.inventory.service.FlightClassService;
 import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -51,7 +50,7 @@ public class BookingServiceImpl implements BookingService {
         int totalPassengers = request.getPassengers().size();
 
         // Kiem tra va giu ghe (be1)
-        for (BookingFlightRequest bookingFlightRequest : request.getFlights() ) {
+        for (BookingFlightRequest bookingFlightRequest : request.getFlights()) {
             flightClassService.decreaseSeats(bookingFlightRequest.getFlightClassId(), totalPassengers);
         }
         Booking booking = bookingMapper.toBooking(request);
@@ -101,7 +100,7 @@ public class BookingServiceImpl implements BookingService {
     public void cancelExpiredBookings() {
         LocalDateTime now = LocalDateTime.now();
         List<Booking> expiredBookings = bookingRepository.findByStatusAndExpireAtBefore(BookingStatus.PENDING, now);
-        if(expiredBookings.isEmpty()) {
+        if (expiredBookings.isEmpty()) {
             log.info("Không có booking quá hạn");
             return;
         }
@@ -113,15 +112,27 @@ public class BookingServiceImpl implements BookingService {
                 ticket.setStatus(TicketStatus.CANCELLED);
             });
             int totalPassengers = booking.getPassengers().size();
-            for (BookingFlight bookingFlight : booking.getBookingFlights()){
+            for (BookingFlight bookingFlight : booking.getBookingFlights()) {
                 try {
                     flightClassService.increaseSeats(bookingFlight.getFlightClassId(), totalPassengers);
                     log.info("Đã trả lại {} ghế cho chuyến bay {}", totalPassengers, bookingFlight.getFlightClassId());
-                }catch (AppException e) {
+                } catch (AppException e) {
                     log.error("Lỗi khi trả ghế cho chuyến bay {}: {}", bookingFlight.getFlightClassId(), e.getMessage());
                 }
             }
         }
+    }
+
+    @Override
+    public Booking getBookingEntityByPnr(String pnrCode) {
+        return bookingRepository.findByPnrCode(pnrCode).orElseThrow(() ->
+                new AppException(ErrorCode.BOOKING_NOT_FOUND));
+    }
+
+    @Override
+    public Booking getBookingEntityById(UUID id) {
+        return bookingRepository.findById(id).orElseThrow(() ->
+                new AppException(ErrorCode.BOOKING_NOT_FOUND));
     }
 
     private String handlePnrCode() {
