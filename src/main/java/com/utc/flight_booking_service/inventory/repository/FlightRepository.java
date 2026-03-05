@@ -9,9 +9,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface FlightRepository extends JpaRepository<Flight, String>, JpaSpecificationExecutor<Flight> {
+public interface FlightRepository extends JpaRepository<Flight, UUID>, JpaSpecificationExecutor<Flight> {
     Optional<Flight> findByAviationFlightId(String aviationFlightId);
 
     @EntityGraph(attributePaths = {"flightClasses", "airline"})

@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/internal/v1/flights")
 @RequiredArgsConstructor
@@ -35,7 +37,7 @@ public class InternalFlightController {
     }
 
     @GetMapping("/{flightClassId}/price")
-    public ApiResponse<FlightPriceResponseDTO> getFlightPrice(@PathVariable String flightClassId) {
+    public ApiResponse<FlightPriceResponseDTO> getFlightPrice(@PathVariable UUID flightClassId) {
         return ApiResponse.<FlightPriceResponseDTO>builder()
                 .message("Lấy thông tin giá vé thành công")
                 .result(flightClassService.getFlightPrice(flightClassId))

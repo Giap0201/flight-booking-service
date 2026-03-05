@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity //Lịch bay
 @Table(name = "flights", indexes = {
@@ -21,7 +22,7 @@ import java.util.List;
 public class Flight extends BaseTimeEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+    UUID id;
 
     @Column(unique = true, length = 100)
     String aviationFlightId;                //ID gốc từ Aviationstack

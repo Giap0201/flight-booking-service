@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -16,4 +17,9 @@ public class FlightPriceResponseDTO {
     String classType;
     BigDecimal basePrice;
     Double taxPercentage;
+    String flightNumber;
+    String origin;
+    String destination;
+    LocalDateTime departureTime;
+    LocalDateTime arrivalTime;
 }

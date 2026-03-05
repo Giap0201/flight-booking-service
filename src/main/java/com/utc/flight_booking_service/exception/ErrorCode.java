@@ -11,7 +11,6 @@ public enum ErrorCode {
     //SYSTEM - COMMON (1xxx)
 
 
-    //BOOKING (2XXX)
     FLIGHT_ID_REQUIRED(2001, "Flight id required", HttpStatus.BAD_REQUEST),
     FLIGHT_CLASS_ID_REQUIRED(2002, "Flight class id required", HttpStatus.BAD_REQUEST),
     UNCATEGORIZED_EXCEPTION(1001, "Lỗi hệ thống không xác định", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -36,6 +35,9 @@ public enum ErrorCode {
     UNAUTHENTICATED(1015, "Chưa xác thực danh tính", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1016, "Bạn không có quyền truy cập", HttpStatus.FORBIDDEN),
     PHONE_INVALID(1013, "Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0", HttpStatus.BAD_REQUEST),
+
+    //BOOKING (2XXX)
+
     FIRST_NAME_REQUIRED(2003, "First name required", HttpStatus.BAD_REQUEST),
     FIRST_NAME_TOO_LONG(2004, "First name too long", HttpStatus.BAD_REQUEST),
     LAST_NAME_REQUIRED(2005, "Last name required", HttpStatus.BAD_REQUEST),
@@ -46,6 +48,8 @@ public enum ErrorCode {
     PASSENGER_TYPE_REQUIRED(2010, "Passenger type required", HttpStatus.BAD_REQUEST),
 
     CANNOT_CREATE_PNR_CODE(2011, "Can't create pnr code", HttpStatus.INTERNAL_SERVER_ERROR),
+    BOOKING_NOT_PAID_YET(2012, "Đơn đặt chưa được thanh toán hoặc đã bị huỷ", HttpStatus.BAD_REQUEST),
+    BOOKING_CANCELLED(2013, "Đơn đặt đã bị huỷ", HttpStatus.BAD_REQUEST),
     BOOKING_NOT_FOUND(2021, "Booking not found", HttpStatus.NOT_FOUND),
     //INVENTORY
     FLIGHT_NOT_FOUND(3000, "Không tìm thấy chuyến bay nào phù hợp", HttpStatus.NOT_FOUND),
