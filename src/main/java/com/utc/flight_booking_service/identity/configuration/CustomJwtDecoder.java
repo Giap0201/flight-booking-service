@@ -2,7 +2,7 @@ package com.utc.flight_booking_service.identity.configuration;
 
 import com.nimbusds.jose.JOSEException;
 import com.utc.flight_booking_service.identity.dto.request.IntrospectRequest;
-import com.utc.flight_booking_service.identity.service.AuthenticationService;
+import com.utc.flight_booking_service.identity.service.impl.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;

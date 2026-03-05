@@ -35,9 +35,9 @@ public enum ErrorCode {
     UNAUTHENTICATED(1015, "Chưa xác thực danh tính", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1016, "Bạn không có quyền truy cập", HttpStatus.FORBIDDEN),
     PHONE_INVALID(1013, "Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0", HttpStatus.BAD_REQUEST),
-
-    //BOOKING (2XXX)
-
+    PASSWORD_INCORRECT(1017, "Mật khẩu cũ không chính xác", HttpStatus.BAD_REQUEST),
+    PASSWORD_CONFIRM_NOT_MATCHED(1018, "Mật khẩu xác nhận không khớp", HttpStatus.BAD_REQUEST),
+    PASSWORD_DUPLICATED(1019, "Mật khẩu không được trùng lặp với mật khẩu cũ", HttpStatus.BAD_REQUEST),
     FIRST_NAME_REQUIRED(2003, "First name required", HttpStatus.BAD_REQUEST),
     FIRST_NAME_TOO_LONG(2004, "First name too long", HttpStatus.BAD_REQUEST),
     LAST_NAME_REQUIRED(2005, "Last name required", HttpStatus.BAD_REQUEST),

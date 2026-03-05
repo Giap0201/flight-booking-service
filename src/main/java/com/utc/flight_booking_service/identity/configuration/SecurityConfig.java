@@ -24,9 +24,10 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
-            "/users", "/auth/login", "/auth/introspect", "/bookings/**"};
+            "/users", "/auth/login", "/auth/introspect", "/bookings/**",  "/users/forgot-password"};
     private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
             "/payments/**","/bookings/**"
+
     };
 
     @Autowired
