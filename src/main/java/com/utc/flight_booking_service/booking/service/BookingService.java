@@ -6,6 +6,7 @@ import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,6 +16,8 @@ public interface BookingService {
     BookingResponse getBookingById(UUID id);
 
     void cancelExpiredBookings();
+
+    int deleteByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime createdAt);
 
     Booking getBookingEntityByPnr(String pnrCode);
 

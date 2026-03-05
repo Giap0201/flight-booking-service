@@ -117,7 +117,7 @@ public class PaymentService {
     public Map<String, String> processIpn(HttpServletRequest request) {
         Map<String, String> response = new HashMap<>();
         try {
-            // Gom toan bo tham so VNPAY gui den vao Map
+            // 1. Gom tham số và xác thực chữ ký (Lớp 1)
             Map<String, String> fields = new HashMap<>();
             for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements(); ) {
                 String fieldName = params.nextElement();
@@ -127,16 +127,11 @@ public class PaymentService {
                 }
             }
 
-            // Tach rieng chu ki cua VNPAY ra khoi map de chuan bi doi chieu
             String vnp_SecureHash = request.getParameter("vnp_SecureHash");
             fields.remove("vnp_SecureHashType");
             fields.remove("vnp_SecureHash");
 
-            // Tu minh bam lai du lieu bang ma bi mat cua minh
             String signValue = VNPayConfig.hashAllFields(fields, secretKey);
-
-            // Kiem tra 4 lop bao ve
-            // Lop 1: Kiem tra chu ki (ma RspCode: 97)
             if (!signValue.equals(vnp_SecureHash)) {
                 response.put("RspCode", "97");
                 response.put("Message", "Invalid Checksum");
@@ -146,7 +141,7 @@ public class PaymentService {
             String pnrCode = request.getParameter("vnp_TxnRef");
             String vnpAmount = request.getParameter("vnp_Amount");
 
-            // Lop 2: Tim ve trong db (Ma RspCode: 01)
+            // 2. Tìm vé trong DB (Lớp 2)
             Booking booking = bookingService.getBookingEntityByPnr(pnrCode);
             if (booking == null) {
                 response.put("RspCode", "01");
@@ -154,7 +149,7 @@ public class PaymentService {
                 return response;
             }
 
-            // Lop 3: Kiem tra dung so tien khong
+            // 3. Kiểm tra số tiền (Lớp 3)
             long expectedAmount = booking.getTotalAmount().longValue() * 100L;
             if (expectedAmount != Long.parseLong(vnpAmount)) {
                 response.put("RspCode", "04");
@@ -162,31 +157,37 @@ public class PaymentService {
                 return response;
             }
 
-            // Lop 4: Kiem tra ve da thanh toan chua
-            if (!"PENDING".equals(booking.getStatus().name())) {
+            // 4. KIỂM TRA IDEMPOTENCY (Tránh trùng lặp)
+            // Nếu vé không còn PENDING và không phải AWAITING_PAYMENT, nghĩa là đã xử lý xong từ trước.
+            if (booking.getStatus() == BookingStatus.CONFIRMED || booking.getStatus() == BookingStatus.CANCELLED) {
                 response.put("RspCode", "02");
                 response.put("Message", "Order already confirmed");
                 return response;
             }
 
+            // boolean isProcessed = transactionRepository.existsByBankRefNo(request.getParameter("vnp_TransactionNo"));
+            // if(isProcessed) { return response 02; }
+
             String responseCode = request.getParameter("vnp_ResponseCode");
+            PaymentStatus currentStatus = "00".equals(responseCode) ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
+
+            // 5. LUÔN LƯU TRANSACTION (Phục vụ đối soát, Audit)
+            Transaction transaction = Transaction.builder()
+                    .bookingId(booking.getId())
+                    .amount(booking.getTotalAmount())
+                    .paymentMethod("VNPAY")
+                    .transactionNo(pnrCode)
+                    .bankRefNo(request.getParameter("vnp_TransactionNo"))
+                    .gatewayResponse(fields.toString())
+                    .status(currentStatus)
+                    .build();
+            transactionRepository.save(transaction);
+
+            // 6. CHỈ CẬP NHẬT BOOKING KHI SUCCESS
             if ("00".equals(responseCode)) {
-                // Khach da thanh toan thanh cong that su
-                Transaction transaction = Transaction.builder()
-                        .bookingId(booking.getId())
-                        .amount(booking.getTotalAmount())
-                        .paymentMethod("VNPAY")
-                        .transactionNo(pnrCode)
-                        .bankRefNo(request.getParameter("vnp_TransactionNo"))
-                        .gatewayResponse(fields.toString())
-                        .status(PaymentStatus.SUCCESS)
-                        .build();
-                transactionRepository.save(transaction);
+                booking.setStatus(BookingStatus.CONFIRMED);
                 bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                 bookingService.issueTicketsForBooking(booking.getId());
-            } else {
-                booking.setStatus(BookingStatus.CANCELLED);
-                bookingService.updateBookingStatus(booking.getId(), BookingStatus.CANCELLED);
             }
 
             response.put("RspCode", "00");
@@ -219,7 +220,9 @@ public class PaymentService {
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
 //                return "http://localhost:3000/payment-success?pnr=" + pnrCode;
-                return "http://localhost:3000";
+//                return "http://localhost:3000";
+                String queryString = request.getQueryString();
+                return "http://localhost:3000?" + queryString;
 
             } else {
                 return "http://localhost:3000/payment-failed?pnr=" + pnrCode;

@@ -123,6 +123,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public int deleteByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime createdAt) {
+        return bookingRepository.deleteByStatusAndCreatedAtBefore(status, createdAt);
+    }
+
+    @Override
     public Booking getBookingEntityByPnr(String pnrCode) {
         return bookingRepository.findByPnrCode(pnrCode).orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
     }
@@ -174,7 +179,18 @@ public class BookingServiceImpl implements BookingService {
             // Nếu trong Map chưa có -> Gọi BE1. Nếu có rồi -> Lấy luôn từ Map
             FlightPriceResponseDTO flightInfo = flightCache.computeIfAbsent(classId, flightClassService::getFlightPrice);
 
-            responses.add(ClientETicketResponse.builder().ticketNumber(ticket.getTicketNumber()).pnrCode(booking.getPnrCode()).status(ticket.getStatus()).passengerFullName(ticket.getPassenger().getFirstName() + " " + ticket.getPassenger().getLastName()).passengerType(ticket.getPassenger().getType()).flightNumber(flightInfo.getFlightNumber()).origin(flightInfo.getOrigin()).destination(flightInfo.getDestination()).totalAmount(ticket.getTotalAmount()).build());
+            responses.add(ClientETicketResponse.builder()
+                    .ticketNumber(ticket.getTicketNumber())
+                    .pnrCode(booking.getPnrCode())
+                    .status(ticket.getStatus())
+                    .passengerFullName(ticket.getPassenger().getFirstName() + " " + ticket.getPassenger().getLastName())
+                    .passengerType(ticket.getPassenger().getType())
+                    .flightNumber(flightInfo.getFlightNumber())
+                    .origin(flightInfo.getOrigin())
+                    .destination(flightInfo.getDestination())
+                    .totalAmount(ticket.getTotalAmount())
+                    .departureTime(flightInfo.getDepartureTime())
+                    .build());
         }
 
         return responses;

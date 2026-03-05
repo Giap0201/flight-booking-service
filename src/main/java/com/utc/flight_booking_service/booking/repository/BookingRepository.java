@@ -15,4 +15,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<Booking> findByStatusAndExpireAtBefore(BookingStatus bookingStatus, LocalDateTime now);
 
     Optional<Booking> findByPnrCode(String pnrCode);
+
+    int deleteByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime createdAtBefore);
 }
