@@ -1,7 +1,9 @@
-package com.utc.flight_booking_service.booking;
+package com.utc.flight_booking_service.booking.controller;
 
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
+import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
+import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -10,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -31,6 +34,14 @@ public class BookingController {
     ApiResponse<BookingResponse> getBookingById(@PathVariable UUID id) {
         return ApiResponse.<BookingResponse>builder()
                 .result(bookingService.getBookingById(id))
+                .build();
+    }
+
+
+    @GetMapping("/{bookingId}/tickets")
+    ApiResponse<List<ClientETicketResponse>> getClientETickets(@PathVariable UUID bookingId) {
+        return ApiResponse.<List<ClientETicketResponse>>builder()
+                .result(bookingService.getTicketsByBookingId(bookingId))
                 .build();
     }
 

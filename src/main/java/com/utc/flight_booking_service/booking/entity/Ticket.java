@@ -48,9 +48,6 @@ public class Ticket extends BaseEntity {
     @Builder.Default
     TicketStatus status = TicketStatus.RESERVED;
 
-//    @Column(name = "passenger_id", nullable = false)
-//    UUID passengerId;
-
     @Column(name = "flight_id", nullable = false)
     UUID flightId;
 

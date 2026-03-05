@@ -1,6 +1,5 @@
-package com.utc.flight_booking_service.booking.impl;
+package com.utc.flight_booking_service.booking.service;
 
-import com.utc.flight_booking_service.booking.PriceService;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.entity.Passenger;
 import com.utc.flight_booking_service.booking.entity.Ticket;
@@ -8,6 +7,8 @@ import com.utc.flight_booking_service.booking.enums.PassengerType;
 import com.utc.flight_booking_service.booking.enums.TicketStatus;
 import com.utc.flight_booking_service.booking.request.BookingFlightRequest;
 import com.utc.flight_booking_service.booking.utils.PassengerUtils;
+import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
+import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -27,6 +28,8 @@ public class PriceServiceImpl implements PriceService {
     static final BigDecimal INFANT_RATE = new BigDecimal("0.10"); // 10%
     static final BigDecimal TAX_RATE = new BigDecimal("0.10");    // 10%
     static final BigDecimal DISCOUNT_RATE = new BigDecimal("0");
+    // inject service be1 lay thong tin gia tien, thue
+    IFlightClassService flightClassService;
 
     @Override
     public List<Ticket> calculateTickets(Booking booking,
@@ -34,14 +37,15 @@ public class PriceServiceImpl implements PriceService {
 
         List<Ticket> tickets = new ArrayList<>();
         for (BookingFlightRequest fReq : bookingFlightRequests) {
+            FlightPriceResponseDTO priceInfo = flightClassService.getFlightPrice(fReq.getFlightClassId());
 
-            // Mock giá & thuế (Sau này gọi FlightService)
-            BigDecimal baseFare = new BigDecimal("1000000");
-            BigDecimal taxRate = new BigDecimal("0.1");
+            BigDecimal baseFare = priceInfo.getBasePrice();
+            BigDecimal taxRate = BigDecimal.valueOf(priceInfo.getTaxPercentage());
 
             for (Passenger p : booking.getPassengers()) {
                 PassengerType type = PassengerUtils.calculatePassengerType(p.getDateOfBirth(), LocalDateTime.now());
                 p.setType(type);
+
                 BigDecimal finalBaseFare = applyAgePolicy(baseFare, type);
                 BigDecimal taxAmount = finalBaseFare.multiply(taxRate);
                 BigDecimal totalAmount = finalBaseFare.add(taxAmount);
@@ -57,6 +61,7 @@ public class PriceServiceImpl implements PriceService {
                         .status(TicketStatus.RESERVED)
                         .discountAmount(discountAmount)
                         .build();
+
 
                 tickets.add(ticket);
             }
