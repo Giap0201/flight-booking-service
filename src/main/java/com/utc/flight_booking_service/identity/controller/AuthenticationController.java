@@ -4,6 +4,7 @@ import com.nimbusds.jose.JOSEException;
 import com.utc.flight_booking_service.common.ApiResponse;
 import com.utc.flight_booking_service.identity.dto.request.AuthenticationRequest;
 import com.utc.flight_booking_service.identity.dto.request.IntrospectRequest;
+import com.utc.flight_booking_service.identity.dto.request.LogoutRequest;
 import com.utc.flight_booking_service.identity.dto.response.AuthenticationReponse;
 import com.utc.flight_booking_service.identity.dto.response.IntrospectResponse;
 import com.utc.flight_booking_service.identity.service.IAuthenticationService;
@@ -37,6 +38,14 @@ public class AuthenticationController {
             throws ParseException, JOSEException {
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder().result(result).build();
+    }
+
+    @PostMapping("/logout")
+    ApiResponse<Void> logout(@RequestBody LogoutRequest request)
+            throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder()
+                .build();
     }
 
 }
