@@ -1,12 +1,9 @@
 package com.utc.flight_booking_service.identity.controller;
 
 import com.utc.flight_booking_service.common.ApiResponse;
-import com.utc.flight_booking_service.identity.dto.request.AdminPasswordResetRequest;
-import com.utc.flight_booking_service.identity.dto.request.ChangePasswordRequest;
-import com.utc.flight_booking_service.identity.dto.request.UserCreationRequest;
-import com.utc.flight_booking_service.identity.dto.request.UserUpdateRequest;
+import com.utc.flight_booking_service.identity.dto.request.*;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
-import com.utc.flight_booking_service.identity.service.UserService;
+import com.utc.flight_booking_service.identity.service.IUserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
-    UserService userService;
+    IUserService userService;
 
     @PostMapping
     public ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
@@ -77,5 +74,11 @@ public class UserController {
     ApiResponse<String> deleteUser(@PathVariable UUID userId) {
         userService.deleteUser(userId);
         return ApiResponse.<String>builder().result("User has been deleted").build();
+    }
+
+    @PostMapping("/forgot-password")
+    ApiResponse<String> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        userService.forgotPassword(request);
+        return ApiResponse.<String>builder().result("Mật khẩu mới đã được gửi về email").build();
     }
 }

@@ -1,17 +1,18 @@
-package com.utc.flight_booking_service.identity.service;
+package com.utc.flight_booking_service.identity.service.impl;
 
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
+import com.utc.flight_booking_service.identity.configuration.passwordGenerator;
 import com.utc.flight_booking_service.identity.domain.entities.Role;
 import com.utc.flight_booking_service.identity.domain.entities.User;
 import com.utc.flight_booking_service.identity.domain.repository.RoleRepository;
 import com.utc.flight_booking_service.identity.domain.repository.UserRepository;
-import com.utc.flight_booking_service.identity.dto.request.AdminPasswordResetRequest;
-import com.utc.flight_booking_service.identity.dto.request.ChangePasswordRequest;
-import com.utc.flight_booking_service.identity.dto.request.UserCreationRequest;
-import com.utc.flight_booking_service.identity.dto.request.UserUpdateRequest;
+import com.utc.flight_booking_service.identity.dto.request.*;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
 import com.utc.flight_booking_service.identity.mapper.UserMapper;
+import com.utc.flight_booking_service.identity.service.IUserService;
+import com.utc.flight_booking_service.notification.dto.NewPasswordEmailRequest;
+import com.utc.flight_booking_service.notification.service.EmailService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +28,14 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class UserService {
+public class UserService implements IUserService {
     UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
+    EmailService emailService;
 
+    @Override
     public UserResponse addUser(UserCreationRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
@@ -52,21 +55,25 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
+    @Override
     public List<UserResponse> getUsers() {
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
     }
 
+    @Override
     public UserResponse getUser(UUID id) {
         return userMapper.toUserResponse(userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
     }
 
+    @Override
     public void deleteUser(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userRepository.delete(user);
     }
 
+    @Override
     public UserResponse updateUser(UserUpdateRequest request, UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -81,6 +88,7 @@ public class UserService {
 
     }
 
+    @Override
     public UserResponse resetPasswordByAdmin(UUID userId, AdminPasswordResetRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -88,6 +96,7 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
+    @Override
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
@@ -97,6 +106,7 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
 
+    @Override
     @Transactional
     public UserResponse changePassword(ChangePasswordRequest request) {
         var context = SecurityContextHolder.getContext();
@@ -113,6 +123,26 @@ public class UserService {
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        String newPassword = passwordGenerator.generate(16);
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        NewPasswordEmailRequest newPasswordEmailRequest = NewPasswordEmailRequest.builder()
+                .newPassword(newPassword)
+                .to(user.getEmail())
+                .name(user.getFullName())
+                .build();
+
+        emailService.sendNewPasswordEmail(newPasswordEmailRequest);
     }
 
 }
