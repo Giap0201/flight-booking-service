@@ -1,6 +1,7 @@
 package com.utc.flight_booking_service.identity.service.impl;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jwt.SignedJWT;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.identity.configuration.JwtUtils;
@@ -11,6 +12,7 @@ import com.utc.flight_booking_service.identity.domain.repository.UserRepository;
 import com.utc.flight_booking_service.identity.dto.request.AuthenticationRequest;
 import com.utc.flight_booking_service.identity.dto.request.IntrospectRequest;
 import com.utc.flight_booking_service.identity.dto.request.LogoutRequest;
+import com.utc.flight_booking_service.identity.dto.request.RefreshRequest;
 import com.utc.flight_booking_service.identity.dto.response.AuthenticationReponse;
 import com.utc.flight_booking_service.identity.dto.response.IntrospectResponse;
 import com.utc.flight_booking_service.identity.service.IAuthenticationService;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -76,6 +79,24 @@ public class AuthenticationService implements IAuthenticationService {
         } catch (AppException exception) {
             log.info("Token already expired");
         }
+    }
+
+    @Override
+    public AuthenticationReponse refreshtoken(RefreshRequest request) throws ParseException, JOSEException {
+        SignedJWT signedJWT = jwtUtils.verifyToken(request.getToken(), true);
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expirytime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .expiryTime(expirytime)
+                .id(jit)
+                .build();
+        invalidatedTokenRepository.save(invalidatedToken);
+        var id = signedJWT.getJWTClaimsSet().getSubject();
+        User user = userRepository.findById(UUID.fromString(id)).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        String token = jwtUtils.generateToken(user);
+        return AuthenticationReponse.builder()
+                .token(token)
+                .build();
     }
 
 }
