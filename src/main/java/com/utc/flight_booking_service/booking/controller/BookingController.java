@@ -1,6 +1,8 @@
 package com.utc.flight_booking_service.booking.controller;
 
 import com.utc.flight_booking_service.booking.request.BookingRequest;
+import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
 import com.utc.flight_booking_service.booking.service.BookingService;
@@ -30,7 +32,7 @@ public class BookingController {
                 .build();
     }
 
-    @GetMapping({"/{id}"})
+    @GetMapping("/{id}")
     ApiResponse<BookingResponse> getBookingById(@PathVariable UUID id) {
         return ApiResponse.<BookingResponse>builder()
                 .result(bookingService.getBookingById(id))
@@ -44,5 +46,13 @@ public class BookingController {
                 .result(bookingService.getTicketsByBookingId(bookingId))
                 .build();
     }
+
+    @GetMapping("/search")
+    ApiResponse<BookingDetailsResponse> getBookingByPnrAndContactEmail(@Valid BookingSearchRequest request) {
+        return ApiResponse.<BookingDetailsResponse>builder()
+                .result(bookingService.getBookingClientByPnrAndContactEmail(request))
+                .build();
+    }
+
 
 }

@@ -13,11 +13,15 @@ import com.utc.flight_booking_service.booking.repository.BookingRepository;
 import com.utc.flight_booking_service.booking.repository.TicketRepository;
 import com.utc.flight_booking_service.booking.request.BookingFlightRequest;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
+import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
 import com.utc.flight_booking_service.booking.utils.GeneratorCode;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
+import com.utc.flight_booking_service.identity.dto.response.UserResponse;
+import com.utc.flight_booking_service.identity.service.IUserService;
 import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
 import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import jakarta.transaction.Transactional;
@@ -44,9 +48,11 @@ public class BookingServiceImpl implements BookingService {
     BookingFlightMapper bookingFlightMapper;
     PriceService priceService;
     IFlightClassService flightClassService;
+    IUserService userService;
 
     @Override
     public BookingResponse createBooking(BookingRequest request) {
+        UserResponse user = userService.getMyInfo();
         int totalPassengers = request.getPassengers().size();
 
         // Kiem tra va giu ghe (be1)
@@ -58,7 +64,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(BookingStatus.PENDING);
         booking.setPnrCode(pnrCode);
         booking.setExpireAt(LocalDateTime.now().plusMinutes(10));
-
+        booking.setUserId(user.getId());
         request.getPassengers().forEach(passenger -> {
             Passenger p = passengerMapper.toPassenger(passenger);
             booking.addPassenger(p);
@@ -165,13 +171,6 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<ClientETicketResponse> getTicketsByBookingId(UUID bookingId) {
         Booking booking = getBookingEntityById(bookingId);
-
-        if (booking.getStatus() == BookingStatus.PENDING) {
-            throw new AppException(ErrorCode.BOOKING_NOT_PAID_YET);
-        }
-        if (booking.getStatus() == BookingStatus.CANCELLED) {
-            throw new AppException(ErrorCode.BOOKING_CANCELLED);
-        }
         Map<UUID, FlightPriceResponseDTO> flightCache = new HashMap<>();
         List<ClientETicketResponse> responses = new ArrayList<>();
         for (Ticket ticket : booking.getTickets()) {
@@ -188,12 +187,29 @@ public class BookingServiceImpl implements BookingService {
                     .flightNumber(flightInfo.getFlightNumber())
                     .origin(flightInfo.getOrigin())
                     .destination(flightInfo.getDestination())
-                    .totalAmount(ticket.getTotalAmount())
                     .departureTime(flightInfo.getDepartureTime())
+                    .arrivalTime(flightInfo.getArrivalTime())
+                    .totalAmount(ticket.getTotalAmount())
+                    .classType(flightInfo.getClassType())
                     .build());
         }
 
         return responses;
+    }
+
+    @Override
+    public BookingDetailsResponse getBookingClientByPnrAndContactEmail(BookingSearchRequest request) {
+        Booking booking = bookingRepository.findByPnrCodeAndContactEmail(request.getPnrCode(), request.getContactEmail()).orElseThrow(() ->
+                new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        List<ClientETicketResponse> eTickets = getTicketsByBookingId(booking.getId());
+        return BookingDetailsResponse.builder()
+                .pnrCode(booking.getPnrCode())
+                .status(booking.getStatus())
+                .grandTotal(booking.getTotalAmount())
+                .expireAt(booking.getExpireAt())
+                .tickets(eTickets)
+                .build();
     }
 
     private String handlePnrCode() {

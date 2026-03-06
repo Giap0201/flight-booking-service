@@ -3,6 +3,8 @@ package com.utc.flight_booking_service.booking.service;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
+import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
 
@@ -29,4 +31,7 @@ public interface BookingService {
     void issueTicketsForBooking(UUID bookingId);
 
     List<ClientETicketResponse> getTicketsByBookingId(UUID bookingId);
+
+    // Khach hang tra cuu booking thong qua ma pnr va email
+    BookingDetailsResponse getBookingClientByPnrAndContactEmail(BookingSearchRequest request);
 }

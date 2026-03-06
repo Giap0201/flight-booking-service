@@ -3,6 +3,7 @@ package com.utc.flight_booking_service.booking.repository;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,4 +18,5 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     Optional<Booking> findByPnrCode(String pnrCode);
 
     int deleteByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime createdAtBefore);
-}
+
+    Optional<Booking> findByPnrCodeAndContactEmail(String pnrCode, String contactEmail);}
