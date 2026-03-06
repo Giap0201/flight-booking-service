@@ -6,7 +6,9 @@ import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
 import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
+import com.utc.flight_booking_service.booking.response.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,4 +36,8 @@ public interface BookingService {
 
     // Khach hang tra cuu booking thong qua ma pnr va email
     BookingDetailsResponse getBookingClientByPnrAndContactEmail(BookingSearchRequest request);
+
+    // Tra cuu lich su dat ve
+    Page<BookingSummaryResponse> getMyBookings(String filter, int page, int size);
+
 }

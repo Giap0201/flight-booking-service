@@ -16,6 +16,7 @@ import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
 import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
+import com.utc.flight_booking_service.booking.response.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
 import com.utc.flight_booking_service.booking.utils.GeneratorCode;
 import com.utc.flight_booking_service.exception.AppException;
@@ -29,6 +30,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -210,6 +214,52 @@ public class BookingServiceImpl implements BookingService {
                 .expireAt(booking.getExpireAt())
                 .tickets(eTickets)
                 .build();
+    }
+
+    @Override
+    public Page<BookingSummaryResponse> getMyBookings(String filter, int page, int size) {
+        UserResponse user = userService.getMyInfo();
+
+        //Spring Boot tính page từ số 0, nên nếu FE gửi page 1, ta phải trừ đi 1.
+        Pageable pageable = PageRequest.of(page - 1, size);
+        LocalDateTime now = LocalDateTime.now();
+        Page<Booking> bookingPage;
+
+        List<BookingStatus> successStatuses = List.of(BookingStatus.PAID, BookingStatus.CONFIRMED);
+        List<BookingStatus> cancelStatuses = List.of(BookingStatus.CANCELLED, BookingStatus.REFUNDED);
+        if ("UPCOMING".equalsIgnoreCase(filter)) {
+            bookingPage = bookingRepository.findUpcomingBookings(user.getId(), successStatuses, now, pageable);
+        } else if ("COMPLETED".equalsIgnoreCase(filter)) {
+            bookingPage = bookingRepository.findCompletedBookings(user.getId(), successStatuses, now, pageable);
+        } else if ("CANCELLED".equalsIgnoreCase(filter)) {
+            bookingPage = bookingRepository.findByUserIdAndStatusInOrderByCreatedAtDesc(user.getId(), cancelStatuses, pageable);
+        } else {
+            bookingPage = bookingRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), pageable);
+        }
+
+        return bookingPage.map(booking -> {
+            BookingSummaryResponse summary = BookingSummaryResponse.builder()
+                    .id(booking.getId())
+                    .pnrCode(booking.getPnrCode())
+                    .status(booking.getStatus())
+                    .totalAmount(booking.getTotalAmount())
+                    .createdAt(booking.getCreatedAt())
+                    .build();
+            // Lay chuyen bay dau tien de lap them thong tin
+            if (booking.getBookingFlights() != null && !booking.getBookingFlights().isEmpty()) {
+                BookingFlight firstBookingFlight = booking.getBookingFlights().stream()
+                        .filter(f -> f.getSegmentNo() == 1)
+                        .findFirst()
+                        .orElse(booking.getBookingFlights().get(0));
+
+                FlightPriceResponseDTO flightInfo = flightClassService.getFlightPrice(firstBookingFlight.getFlightClassId());
+                summary.setFlightNumber(flightInfo.getFlightNumber());
+                summary.setOrigin(flightInfo.getOrigin());
+                summary.setDestination(flightInfo.getDestination());
+                summary.setDepartureTime(firstBookingFlight.getOriginDepartureTime());
+            }
+            return summary;
+        });
     }
 
     private String handlePnrCode() {
