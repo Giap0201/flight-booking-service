@@ -3,7 +3,7 @@ package com.utc.flight_booking_service.identity.controller;
 import com.utc.flight_booking_service.common.ApiResponse;
 import com.utc.flight_booking_service.identity.domain.entities.Role;
 import com.utc.flight_booking_service.identity.dto.request.RoleCreatetionRequest;
-import com.utc.flight_booking_service.identity.service.RoleService;
+import com.utc.flight_booking_service.identity.service.IRoleService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RoleController {
-    RoleService roleService;
+    IRoleService roleService;
 
     @PostMapping
     public ApiResponse<Role> createRole(@RequestBody RoleCreatetionRequest request) {

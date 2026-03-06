@@ -1,4 +1,4 @@
-package com.utc.flight_booking_service.booking;
+package com.utc.flight_booking_service.booking.service;
 
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.entity.Ticket;
@@ -9,5 +9,4 @@ import java.util.List;
 public interface PriceService {
     List<Ticket> calculateTickets(Booking booking,
                                   List<BookingFlightRequest> bookingFlightRequests);
-
 }

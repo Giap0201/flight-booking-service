@@ -1,10 +1,9 @@
 package com.utc.flight_booking_service.identity.controller;
 
 import com.utc.flight_booking_service.common.ApiResponse;
-import com.utc.flight_booking_service.identity.dto.request.UserCreationRequest;
-import com.utc.flight_booking_service.identity.dto.request.UserUpdateRequest;
+import com.utc.flight_booking_service.identity.dto.request.*;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
-import com.utc.flight_booking_service.identity.service.UserService;
+import com.utc.flight_booking_service.identity.service.IUserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
-    UserService userService;
+    IUserService userService;
 
     @PostMapping
     public ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
@@ -31,6 +30,13 @@ public class UserController {
     @GetMapping
     ApiResponse<List<UserResponse>> getUsers() {
         return ApiResponse.<List<UserResponse>>builder().result(userService.getUsers())
+                .build();
+    }
+
+    @GetMapping("/my-infor")
+    public ApiResponse<UserResponse> getMyInfor() {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getMyInfo())
                 .build();
     }
 
@@ -48,9 +54,32 @@ public class UserController {
                 .build();
     }
 
+    @PatchMapping("/{userId}/reset-password")
+    ApiResponse<UserResponse> adminResetPassword(@RequestBody @Valid AdminPasswordResetRequest request, @PathVariable UUID userId) {
+
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.resetPasswordByAdmin(userId, request))
+                .build();
+    }
+
+    @PatchMapping("/change-password")
+    ApiResponse<UserResponse> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
+
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.changePassword(request))
+                .build();
+    }
+
     @DeleteMapping("/{userId}")
     ApiResponse<String> deleteUser(@PathVariable UUID userId) {
         userService.deleteUser(userId);
         return ApiResponse.<String>builder().result("User has been deleted").build();
     }
+
+    @PostMapping("/forgot-password")
+    ApiResponse<String> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        userService.forgotPassword(request);
+        return ApiResponse.<String>builder().result("Mật khẩu mới đã được gửi về email").build();
+    }
+
 }
