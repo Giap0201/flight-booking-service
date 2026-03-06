@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -55,11 +56,13 @@ public class UserService implements IUserService {
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     public List<UserResponse> getUsers() {
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     public UserResponse getUser(UUID id) {
         return userMapper.toUserResponse(userRepository.findById(id)
@@ -88,6 +91,7 @@ public class UserService implements IUserService {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     public UserResponse resetPasswordByAdmin(UUID userId, AdminPasswordResetRequest request) {
         User user = userRepository.findById(userId)
