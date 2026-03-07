@@ -5,6 +5,7 @@ import com.utc.flight_booking_service.common.ApiResponse;
 import com.utc.flight_booking_service.identity.dto.request.AuthenticationRequest;
 import com.utc.flight_booking_service.identity.dto.request.IntrospectRequest;
 import com.utc.flight_booking_service.identity.dto.request.LogoutRequest;
+import com.utc.flight_booking_service.identity.dto.request.RefreshRequest;
 import com.utc.flight_booking_service.identity.dto.response.AuthenticationReponse;
 import com.utc.flight_booking_service.identity.dto.response.IntrospectResponse;
 import com.utc.flight_booking_service.identity.service.IAuthenticationService;
@@ -45,6 +46,15 @@ public class AuthenticationController {
             throws ParseException, JOSEException {
         authenticationService.logout(request);
         return ApiResponse.<Void>builder()
+                .build();
+    }
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationReponse> logout(@RequestBody RefreshRequest request)
+            throws ParseException, JOSEException {
+
+        return ApiResponse.<AuthenticationReponse>builder()
+                .result(authenticationService.refreshtoken(request))
                 .build();
     }
 

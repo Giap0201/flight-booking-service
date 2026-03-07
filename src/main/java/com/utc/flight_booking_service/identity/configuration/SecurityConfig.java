@@ -24,7 +24,7 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
-            "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/users/forgot-password"};
+            "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", "/bookings/**", "/users/forgot-password"};
     private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
             "/payments/**", "/bookings/**"
 
@@ -64,7 +64,7 @@ public class SecurityConfig {
                                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
                 )
 
-             
+
                 .csrf(AbstractHttpConfigurer::disable);
 
         return httpSecurity.build();
