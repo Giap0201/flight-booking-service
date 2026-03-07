@@ -8,7 +8,7 @@ import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
 import com.utc.flight_booking_service.booking.response.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
-import org.springframework.data.domain.Page;
+import com.utc.flight_booking_service.booking.response.page.PageResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,6 +38,9 @@ public interface BookingService {
     BookingDetailsResponse getBookingClientByPnrAndContactEmail(BookingSearchRequest request);
 
     // Tra cuu lich su dat ve
-    Page<BookingSummaryResponse> getMyBookings(String filter, int page, int size);
+    PageResponse<BookingSummaryResponse> getMyBookings(String filter, int page, int size);
+
+    //Khach tu huy ve khi chua thanh toan
+
 
 }

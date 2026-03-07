@@ -6,13 +6,13 @@ import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
 import com.utc.flight_booking_service.booking.response.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
+import com.utc.flight_booking_service.booking.response.page.PageResponse;
 import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,11 +57,11 @@ public class BookingController {
     }
 
     @GetMapping("/my-bookings")
-    ApiResponse<Page<BookingSummaryResponse>> getMyBookings(
+    ApiResponse<PageResponse<BookingSummaryResponse>> getMyBookings(
             @RequestParam(defaultValue = "ALL") String filter,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.<Page<BookingSummaryResponse>>builder()
+        return ApiResponse.<PageResponse<BookingSummaryResponse>>builder()
                 .result(bookingService.getMyBookings(filter, page, size))
                 .build();
     }

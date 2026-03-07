@@ -18,6 +18,7 @@ import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
 import com.utc.flight_booking_service.booking.response.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
+import com.utc.flight_booking_service.booking.response.page.PageResponse;
 import com.utc.flight_booking_service.booking.utils.GeneratorCode;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
@@ -217,7 +218,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Page<BookingSummaryResponse> getMyBookings(String filter, int page, int size) {
+    public PageResponse<BookingSummaryResponse> getMyBookings(String filter, int page, int size) {
         UserResponse user = userService.getMyInfo();
 
         //Spring Boot tính page từ số 0, nên nếu FE gửi page 1, ta phải trừ đi 1.
@@ -237,7 +238,7 @@ public class BookingServiceImpl implements BookingService {
             bookingPage = bookingRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), pageable);
         }
 
-        return bookingPage.map(booking -> {
+        List<BookingSummaryResponse> content = bookingPage.getContent().stream().map(booking -> {
             BookingSummaryResponse summary = BookingSummaryResponse.builder()
                     .id(booking.getId())
                     .pnrCode(booking.getPnrCode())
@@ -259,7 +260,14 @@ public class BookingServiceImpl implements BookingService {
                 summary.setDepartureTime(firstBookingFlight.getOriginDepartureTime());
             }
             return summary;
-        });
+        }).toList();
+        return PageResponse.<BookingSummaryResponse>builder()
+                .currentPage(page)
+                .pageSize(bookingPage.getSize())
+                .totalPages(bookingPage.getTotalPages())
+                .totalElements(bookingPage.getTotalElements())
+                .content(content)
+                .build();
     }
 
     private String handlePnrCode() {
