@@ -28,6 +28,7 @@ public class BookingResponse {
     BigDecimal totalTaxAmount;
     BigDecimal totalDiscountAmount;
     String promotionCode;
+    UUID userId;
     List<BookingFlightResponse> flights;
     List<PassengerResponse> passengers;
     List<TicketResponse> tickets;

@@ -1,8 +1,12 @@
 package com.utc.flight_booking_service.booking.controller;
 
 import com.utc.flight_booking_service.booking.request.BookingRequest;
+import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
 import com.utc.flight_booking_service.booking.response.BookingResponse;
+import com.utc.flight_booking_service.booking.response.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
+import com.utc.flight_booking_service.booking.response.page.PageResponse;
 import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -30,7 +34,7 @@ public class BookingController {
                 .build();
     }
 
-    @GetMapping({"/{id}"})
+    @GetMapping("/{id}")
     ApiResponse<BookingResponse> getBookingById(@PathVariable UUID id) {
         return ApiResponse.<BookingResponse>builder()
                 .result(bookingService.getBookingById(id))
@@ -45,4 +49,29 @@ public class BookingController {
                 .build();
     }
 
+    @GetMapping("/search")
+    ApiResponse<BookingDetailsResponse> getBookingByPnrAndContactEmail(@Valid BookingSearchRequest request) {
+        return ApiResponse.<BookingDetailsResponse>builder()
+                .result(bookingService.getBookingClientByPnrAndContactEmail(request))
+                .build();
+    }
+
+    @GetMapping("/my-bookings")
+    ApiResponse<PageResponse<BookingSummaryResponse>> getMyBookings(
+            @RequestParam(defaultValue = "ALL") String filter,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.<PageResponse<BookingSummaryResponse>>builder()
+                .result(bookingService.getMyBookings(filter, page, size))
+                .build();
+    }
+
+    @PostMapping("/{id}/cancel")
+    ApiResponse<String> cancelUnpaidBooking(@PathVariable UUID id) {
+        bookingService.cancelUnpaidBooking(id);
+        return ApiResponse.<String>builder()
+                .message("Hủy vé thành công")
+                .result("CANCELLED")
+                .build();
+    }
 }
