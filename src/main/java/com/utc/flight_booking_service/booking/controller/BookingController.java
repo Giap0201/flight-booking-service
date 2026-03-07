@@ -65,4 +65,13 @@ public class BookingController {
                 .result(bookingService.getMyBookings(filter, page, size))
                 .build();
     }
+
+    @PostMapping("/{id}/cancel")
+    ApiResponse<String> cancelUnpaidBooking(@PathVariable UUID id) {
+        bookingService.cancelUnpaidBooking(id);
+        return ApiResponse.<String>builder()
+                .message("Hủy vé thành công")
+                .result("CANCELLED")
+                .build();
+    }
 }

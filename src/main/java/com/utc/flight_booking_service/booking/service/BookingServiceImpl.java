@@ -270,6 +270,34 @@ public class BookingServiceImpl implements BookingService {
                 .build();
     }
 
+    @Override
+    public void cancelUnpaidBooking(UUID bookingId) {
+        UserResponse user = userService.getMyInfo();
+        if(user == null) throw new AppException(ErrorCode.UNAUTHENTICATED);
+        Booking booking = getBookingEntityById(bookingId);
+        if(booking.getUserId() == null || !booking.getUserId().equals(user.getId())) {
+            log.warn("User {} cố tình hủy Booking {} của người khác!", user.getId(), bookingId);
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+        if (booking.getStatus() != BookingStatus.PENDING && booking.getStatus() != BookingStatus.AWAITING_PAYMENT) {
+            log.error("Không thể hủy vé vì trạng thái hiện tại là: {}", booking.getStatus());
+            throw new AppException(ErrorCode.CANNOT_CANCEL_BOOKING);
+        }
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.getTickets().forEach(ticket -> ticket.setStatus((TicketStatus.CANCELLED)));
+        int totalPassengers = booking.getPassengers().size();
+        for (BookingFlight bookingFlight : booking.getBookingFlights()) {
+            try {
+                flightClassService.increaseSeats(bookingFlight.getFlightClassId(), totalPassengers);
+                log.info("Đã trả lại {} ghế cho chuyến bay {}", totalPassengers, bookingFlight.getFlightClassId());
+            } catch (AppException e) {
+                log.error("Lỗi khi trả ghế cho chuyến bay {}: {}", bookingFlight.getFlightClassId(), e.getMessage());
+            }
+        }
+        bookingRepository.save(booking);
+        log.info("User {} đã tự hủy thành công Booking {}", user.getId(), booking.getPnrCode());
+    }
+
     private String handlePnrCode() {
         String pnrCode;
         int counter = 0;

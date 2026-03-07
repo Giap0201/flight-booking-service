@@ -15,23 +15,30 @@ import java.util.List;
 import java.util.UUID;
 
 public interface BookingService {
+    //Tao ra mot booking moi
     BookingResponse createBooking(BookingRequest request);
 
+    // Lay booking theo id
     BookingResponse getBookingById(UUID id);
 
+    // Tu dong huy booking khi chua thanh toan sau 15p
     void cancelExpiredBookings();
 
+    // Xoa booking da huy trong 30 ngay
     int deleteByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime createdAt);
+
 
     Booking getBookingEntityByPnr(String pnrCode);
 
     Booking getBookingEntityById(UUID id);
 
+    // Cap nhap trang thai booking
     void updateBookingStatus(UUID id, BookingStatus status);
 
     // Ham tao ve khi thanh toan thanh cong
     void issueTicketsForBooking(UUID bookingId);
 
+    // Lay danh sach ve xuat pdf
     List<ClientETicketResponse> getTicketsByBookingId(UUID bookingId);
 
     // Khach hang tra cuu booking thong qua ma pnr va email
@@ -41,6 +48,6 @@ public interface BookingService {
     PageResponse<BookingSummaryResponse> getMyBookings(String filter, int page, int size);
 
     //Khach tu huy ve khi chua thanh toan
-
+    void cancelUnpaidBooking(UUID bookingId);
 
 }

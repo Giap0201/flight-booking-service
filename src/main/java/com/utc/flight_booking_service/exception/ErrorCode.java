@@ -63,7 +63,8 @@ public enum ErrorCode {
     BOOKING_NOT_FOUND(2021, "Không tìm thấy Booking", HttpStatus.NOT_FOUND),
     FLIGHTS_REQUIRED(2022,"Danh sách chuyến đi không được rỗng", HttpStatus.BAD_REQUEST ),
     PASSENGERS_REQUIRED(2023, "Danh sách hành khách không được rỗng", HttpStatus.BAD_REQUEST ),
-
+    CANNOT_CANCEL_BOOKING(2024, "Chỉ có thể hủy đơn đặt chỗ khi chưa thanh toán", HttpStatus.BAD_REQUEST),
+    FORBIDDEN(2025, "Bạn không có quyền truy cập vào đơn đặt chỗ này", HttpStatus.FORBIDDEN),
 
 
 
