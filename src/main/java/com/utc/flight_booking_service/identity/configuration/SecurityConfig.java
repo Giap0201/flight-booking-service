@@ -36,6 +36,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
+        httpSecurity.cors(org.springframework.security.config.Customizer.withDefaults());
+
         httpSecurity
                 .authorizeHttpRequests(request -> request
 
