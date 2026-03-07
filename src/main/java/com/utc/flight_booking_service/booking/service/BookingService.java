@@ -5,6 +5,7 @@ import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.booking.request.AdminBookingSearchRequest;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.response.admin.AdminBookingDetailResponse;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingCreatedResponse;
@@ -55,4 +56,6 @@ public interface BookingService {
     // Ham tim kiem theo nhieu tieu chi danh cho admin
     PageResponse<AdminBookingSummaryResponse> searchBookingsForAdmin(AdminBookingSearchRequest request, int page, int size);
 
+    // Lay thong tin booking danh cho admin (ca transaction)
+    AdminBookingDetailResponse getBookingDetailsForAdmin(UUID id) ;
 }

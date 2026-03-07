@@ -15,6 +15,7 @@ import com.utc.flight_booking_service.booking.request.AdminBookingSearchRequest;
 import com.utc.flight_booking_service.booking.request.BookingFlightRequest;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.response.admin.AdminBookingDetailResponse;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.client.*;
 import com.utc.flight_booking_service.booking.response.share.ContactResponse;
@@ -28,6 +29,8 @@ import com.utc.flight_booking_service.identity.dto.response.UserResponse;
 import com.utc.flight_booking_service.identity.service.IUserService;
 import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
 import com.utc.flight_booking_service.inventory.service.IFlightClassService;
+import com.utc.flight_booking_service.payment.dto.response.AdminTransactionResponse;
+import com.utc.flight_booking_service.payment.service.TransactionService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +62,7 @@ public class BookingServiceImpl implements BookingService {
     PriceService priceService;
     IFlightClassService flightClassService;
     IUserService userService;
+    TransactionService transactionService;
 
     @Override
     public BookingCreatedResponse createBooking(BookingRequest request) {
@@ -300,6 +304,20 @@ public class BookingServiceImpl implements BookingService {
                 .totalPages(bookingPage.getTotalPages())
                 .totalElements(bookingPage.getTotalElements())
                 .content(content)
+                .build();
+    }
+
+    @Override
+    public AdminBookingDetailResponse getBookingDetailsForAdmin(UUID id) {
+        Booking booking = getBookingEntityById(id);
+        BookingDetailResponse bookingDetailResponse = mapToBookingDetailResponse(booking);
+        List<AdminTransactionResponse> transactionResponse = transactionService.getTransactionsByBookingId(id);
+        return AdminBookingDetailResponse.builder()
+                .baseDetails(bookingDetailResponse)
+                .transactions(transactionResponse)
+                .createdAt(booking.getCreatedAt())
+                .updatedAt(booking.getUpdatedAt())
+                .userId(booking.getUserId())
                 .build();
     }
 
