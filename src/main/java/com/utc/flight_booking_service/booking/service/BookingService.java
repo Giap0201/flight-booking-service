@@ -2,6 +2,7 @@ package com.utc.flight_booking_service.booking.service;
 
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
+import com.utc.flight_booking_service.booking.request.AdminBookingSearchRequest;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
 import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
@@ -49,5 +50,8 @@ public interface BookingService {
 
     //Khach tu huy ve khi chua thanh toan
     void cancelUnpaidBooking(UUID bookingId);
+
+    // Ham tim kiem theo nhieu tieu chi danh cho admin
+    PageResponse<BookingSummaryResponse> searchBookingsForAdmin(AdminBookingSearchRequest request, int page, int size);
 
 }
