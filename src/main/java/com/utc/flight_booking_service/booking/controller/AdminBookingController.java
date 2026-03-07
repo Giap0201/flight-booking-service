@@ -2,8 +2,9 @@ package com.utc.flight_booking_service.booking.controller;
 
 
 import com.utc.flight_booking_service.booking.request.AdminBookingSearchRequest;
-import com.utc.flight_booking_service.booking.response.BookingSummaryResponse;
-import com.utc.flight_booking_service.booking.response.page.PageResponse;
+import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummaryResponse;
+import com.utc.flight_booking_service.booking.response.client.BookingSummaryResponse;
+import com.utc.flight_booking_service.booking.response.share.PageResponse;
 import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.common.ApiResponse;
 import lombok.AccessLevel;
@@ -23,10 +24,10 @@ public class AdminBookingController {
     BookingService bookingService;
 
     @GetMapping
-    public ApiResponse<PageResponse<BookingSummaryResponse>> searchBookings(AdminBookingSearchRequest request,
+    public ApiResponse<PageResponse<AdminBookingSummaryResponse>> searchBookings(AdminBookingSearchRequest request,
                                                                             @RequestParam(defaultValue = "1") int page,
                                                                             @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.<PageResponse<BookingSummaryResponse>>builder()
+        return ApiResponse.<PageResponse<AdminBookingSummaryResponse>>builder()
                 .result(bookingService.searchBookingsForAdmin(request, page, size))
                 .build();
     }

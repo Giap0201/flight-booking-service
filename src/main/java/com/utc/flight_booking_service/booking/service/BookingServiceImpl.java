@@ -15,11 +15,11 @@ import com.utc.flight_booking_service.booking.request.AdminBookingSearchRequest;
 import com.utc.flight_booking_service.booking.request.BookingFlightRequest;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
-import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
-import com.utc.flight_booking_service.booking.response.BookingResponse;
-import com.utc.flight_booking_service.booking.response.BookingSummaryResponse;
-import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
-import com.utc.flight_booking_service.booking.response.page.PageResponse;
+import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummaryResponse;
+import com.utc.flight_booking_service.booking.response.client.*;
+import com.utc.flight_booking_service.booking.response.share.ContactResponse;
+import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
+import com.utc.flight_booking_service.booking.response.share.PageResponse;
 import com.utc.flight_booking_service.booking.specification.BookingSpecification;
 import com.utc.flight_booking_service.booking.utils.GeneratorCode;
 import com.utc.flight_booking_service.exception.AppException;
@@ -43,6 +43,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -60,7 +61,7 @@ public class BookingServiceImpl implements BookingService {
     IUserService userService;
 
     @Override
-    public BookingResponse createBooking(BookingRequest request) {
+    public BookingCreatedResponse createBooking(BookingRequest request) {
         UserResponse user = userService.getMyInfo();
         int totalPassengers = request.getPassengers().size();
 
@@ -101,13 +102,14 @@ public class BookingServiceImpl implements BookingService {
         booking.setTotalTaxAmount(totalTax);
         tickets.forEach(booking::addTicket);
         Booking savedBooking = bookingRepository.save(booking);
-        return bookingMapper.toBookingResponse(savedBooking);
+        return bookingMapper.toBookingCreatedResponse(savedBooking);
     }
 
     @Override
-    public BookingResponse getBookingById(UUID id) {
-        Booking booking = bookingRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
-        return bookingMapper.toBookingResponse(booking);
+    public BookingDetailResponse getBookingById(UUID id) {
+        Booking booking = bookingRepository.findById(id).orElseThrow(()
+                -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        return mapToBookingDetailResponse(booking);
     }
 
     @Override
@@ -144,12 +146,14 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking getBookingEntityByPnr(String pnrCode) {
-        return bookingRepository.findByPnrCode(pnrCode).orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        return bookingRepository.findByPnrCode(pnrCode).orElseThrow(() ->
+                new AppException(ErrorCode.BOOKING_NOT_FOUND));
     }
 
     @Override
     public Booking getBookingEntityById(UUID id) {
-        return bookingRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        return bookingRepository.findById(id).orElseThrow(() ->
+                new AppException(ErrorCode.BOOKING_NOT_FOUND));
     }
 
     @Override
@@ -173,33 +177,42 @@ public class BookingServiceImpl implements BookingService {
                 ticket.setStatus(TicketStatus.ISSUED);
             }
         }
+        booking.setStatus(BookingStatus.CONFIRMED);
         bookingRepository.save(booking);
         log.info("Đã xuất vé thành công cho Booking: {}", booking.getPnrCode());
     }
 
     @Override
-    public List<ClientETicketResponse> getTicketsByBookingId(UUID bookingId) {
+    public List<ETicketEmailModel> getTicketsByBookingId(UUID bookingId) {
         Booking booking = getBookingEntityById(bookingId);
+
+        // Cache API BE1
         Map<UUID, FlightPriceResponseDTO> flightCache = new HashMap<>();
-        List<ClientETicketResponse> responses = new ArrayList<>();
+        Map<UUID, BookingFlight> snapshotCache = booking.getBookingFlights().stream()
+                .collect(Collectors.toMap(BookingFlight::getFlightClassId, bf -> bf));
+
+        List<ETicketEmailModel> responses = new ArrayList<>();
+
         for (Ticket ticket : booking.getTickets()) {
             UUID classId = ticket.getFlightClassId();
-            // Nếu trong Map chưa có -> Gọi BE1. Nếu có rồi -> Lấy luôn từ Map
             FlightPriceResponseDTO flightInfo = flightCache.computeIfAbsent(classId, flightClassService::getFlightPrice);
 
-            responses.add(ClientETicketResponse.builder()
+            BookingFlight snapshotFlight = snapshotCache.get(classId);
+
+            responses.add(ETicketEmailModel.builder()
                     .ticketNumber(ticket.getTicketNumber())
                     .pnrCode(booking.getPnrCode())
                     .status(ticket.getStatus())
                     .passengerFullName(ticket.getPassenger().getFirstName() + " " + ticket.getPassenger().getLastName())
                     .passengerType(ticket.getPassenger().getType())
-                    .flightNumber(flightInfo.getFlightNumber())
                     .origin(flightInfo.getOrigin())
                     .destination(flightInfo.getDestination())
-                    .departureTime(flightInfo.getDepartureTime())
-                    .arrivalTime(flightInfo.getArrivalTime())
                     .totalAmount(ticket.getTotalAmount())
                     .classType(flightInfo.getClassType())
+                    .seatNumber(ticket.getSeatNumber()) // Bổ sung số ghế
+                    .flightNumber(snapshotFlight != null ? snapshotFlight.getOriginFlightNumber() : flightInfo.getFlightNumber())
+                    .departureTime(snapshotFlight != null ? snapshotFlight.getOriginDepartureTime() : flightInfo.getDepartureTime())
+                    .arrivalTime(snapshotFlight != null ? snapshotFlight.getOriginArrivalTime() : flightInfo.getArrivalTime())
                     .build());
         }
 
@@ -207,18 +220,10 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingDetailsResponse getBookingClientByPnrAndContactEmail(BookingSearchRequest request) {
+    public BookingDetailResponse getBookingClientByPnrAndContactEmail(BookingSearchRequest request) {
         Booking booking = bookingRepository.findByPnrCodeAndContactEmail(request.getPnrCode(), request.getContactEmail()).orElseThrow(() ->
                 new AppException(ErrorCode.BOOKING_NOT_FOUND));
-
-        List<ClientETicketResponse> eTickets = getTicketsByBookingId(booking.getId());
-        return BookingDetailsResponse.builder()
-                .pnrCode(booking.getPnrCode())
-                .status(booking.getStatus())
-                .grandTotal(booking.getTotalAmount())
-                .expireAt(booking.getExpireAt())
-                .tickets(eTickets)
-                .build();
+        return mapToBookingDetailResponse(booking);
     }
 
     @Override
@@ -281,15 +286,15 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public PageResponse<BookingSummaryResponse> searchBookingsForAdmin(AdminBookingSearchRequest request, int page, int size) {
+    public PageResponse<AdminBookingSummaryResponse> searchBookingsForAdmin(AdminBookingSearchRequest request, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         Specification<Booking> spec = BookingSpecification.getSearchSpec(request);
         Page<Booking> bookingPage = bookingRepository.findAll(spec, pageable);
 
-        List<BookingSummaryResponse> content = bookingPage.getContent().stream()
-                .map(this::mapToBookingSummaryResponse)
+        List<AdminBookingSummaryResponse> content = bookingPage.getContent().stream()
+                .map(this::mapToAdminBookingSummaryResponse)
                 .toList();
-        return PageResponse.<BookingSummaryResponse>builder()
+        return PageResponse.<AdminBookingSummaryResponse>builder()
                 .currentPage(page)
                 .pageSize(bookingPage.getSize())
                 .totalPages(bookingPage.getTotalPages())
@@ -325,7 +330,88 @@ public class BookingServiceImpl implements BookingService {
                     .orElse(booking.getBookingFlights().get(0));
 
             FlightPriceResponseDTO flightInfo = flightClassService.getFlightPrice(firstBookingFlight.getFlightClassId());
-            summary.setFlightNumber(flightInfo.getFlightNumber());
+            summary.setFlightNumber(firstBookingFlight.getOriginFlightNumber());
+            summary.setOrigin(flightInfo.getOrigin());
+            summary.setDestination(flightInfo.getDestination());
+            summary.setDepartureTime(firstBookingFlight.getOriginDepartureTime());
+        }
+        return summary;
+    }
+
+    private BookingDetailResponse mapToBookingDetailResponse(Booking booking) {
+        ContactResponse contact = ContactResponse.builder()
+                .name(booking.getContactName())
+                .email(booking.getContactEmail())
+                .phone(booking.getContactPhone())
+                .build();
+
+        Map<UUID, FlightPriceResponseDTO> flightCache = new HashMap<>();
+
+        List<PassengerTicketResponse> passengerResponses = booking.getPassengers().stream().map(passenger -> {
+            List<TicketDetailResponse> ticketResponses = booking.getTickets().stream()
+                    .filter(ticket -> ticket.getPassenger().getId().equals(passenger.getId()))
+                    .map(ticket -> {
+                        BookingFlight snapshotFlight = booking.getBookingFlights().stream()
+                                .filter(bf -> bf.getFlightClassId().equals(ticket.getFlightClassId()))
+                                .findFirst()
+                                .orElse(null);
+                        FlightPriceResponseDTO be1Info = flightCache.computeIfAbsent(
+                                ticket.getFlightClassId(), flightClassService::getFlightPrice);
+                        return TicketDetailResponse.builder()
+                                .ticketNumber(ticket.getTicketNumber())
+                                .status(ticket.getStatus())
+                                .seatNumber(ticket.getSeatNumber())
+                                .totalAmount(ticket.getTotalAmount())
+                                .flightNumber(snapshotFlight != null ? snapshotFlight.getOriginFlightNumber() : be1Info.getFlightNumber())
+                                .departureTime(snapshotFlight != null ? snapshotFlight.getOriginDepartureTime() : be1Info.getDepartureTime())
+                                .arrivalTime(snapshotFlight != null ? snapshotFlight.getOriginArrivalTime() : be1Info.getArrivalTime())
+                                .departureAirport(be1Info.getOrigin())
+                                .arrivalAirport(be1Info.getDestination())
+                                .classType(be1Info.getClassType())
+                                .build();
+                    }).toList();
+
+            return PassengerTicketResponse.builder()
+                    .passengerId(passenger.getId())
+                    .firstName(passenger.getFirstName())
+                    .lastName(passenger.getLastName())
+                    .type(passenger.getType())
+                    .tickets(ticketResponses)
+                    .build();
+        }).toList();
+
+        return BookingDetailResponse.builder()
+                .id(booking.getId())
+                .pnrCode(booking.getPnrCode())
+                .status(booking.getStatus())
+                .totalAmount(booking.getTotalAmount())
+                .currency(booking.getCurrency() != null ? booking.getCurrency() : "VND")
+                .contact(contact)
+                .passengers(passengerResponses)
+                .build();
+    }
+
+    private AdminBookingSummaryResponse mapToAdminBookingSummaryResponse(Booking booking) {
+        AdminBookingSummaryResponse summary = AdminBookingSummaryResponse.builder()
+                .id(booking.getId())
+                .pnrCode(booking.getPnrCode())
+                .status(booking.getStatus())
+                .totalAmount(booking.getTotalAmount())
+                .createdAt(booking.getCreatedAt())
+                .contactName(booking.getContactName())
+                .contactPhone(booking.getContactPhone())
+                .contactEmail(booking.getContactEmail())
+                .build();
+
+        // Tái sử dụng logic lấy chuyến bay đầu tiên
+        if (booking.getBookingFlights() != null && !booking.getBookingFlights().isEmpty()) {
+            BookingFlight firstBookingFlight = booking.getBookingFlights().stream()
+                    .filter(f -> f.getSegmentNo() == 1)
+                    .findFirst()
+                    .orElse(booking.getBookingFlights().get(0));
+
+            FlightPriceResponseDTO flightInfo = flightClassService.getFlightPrice(firstBookingFlight.getFlightClassId());
+            summary.setFlightNumber(firstBookingFlight.getOriginFlightNumber());
             summary.setOrigin(flightInfo.getOrigin());
             summary.setDestination(flightInfo.getDestination());
             summary.setDepartureTime(firstBookingFlight.getOriginDepartureTime());
