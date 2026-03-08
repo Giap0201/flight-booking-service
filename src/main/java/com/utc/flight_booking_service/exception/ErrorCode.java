@@ -82,6 +82,14 @@ public enum ErrorCode {
     ANCILLARY_CATALOG_CODE_EXISTED(2106, "Mã dịch vụ này đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
     ANCILLARY_CATALOG_NAME_EXISTED(2107, "Tên dịch vụ này đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
 
+    // BOOKING_ANCILLARY
+    ANCILLARY_CATALOG_ID_REQUIRED(2108, "ID dịch vụ bổ trợ không được để trống", HttpStatus.BAD_REQUEST),
+    PASSENGER_INDEX_REQUIRED(2109, "Chỉ mục hành khách (passengerIndex) không được để trống", HttpStatus.BAD_REQUEST),
+    SEGMENT_NO_REQUIRED(2110, "Mã chặng bay (segmentNo) không được để trống", HttpStatus.BAD_REQUEST),
+    PASSENGER_INDEX_OUT_OF_BOUNDS(2111, "Chỉ mục hành khách không hợp lệ so với số lượng khách thực tế", HttpStatus.BAD_REQUEST),
+    SEGMENT_NO_INVALID(2112, "Mã chặng bay (segmentNo) không khớp với hành trình đã chọn", HttpStatus.BAD_REQUEST),
+
+
     //INVENTORY
     FLIGHT_NOT_FOUND(3000, "Không tìm thấy chuyến bay nào phù hợp", HttpStatus.NOT_FOUND),
     ORIGIN_REQUIRED(3001, "Điểm đi không được để trống", HttpStatus.BAD_REQUEST),

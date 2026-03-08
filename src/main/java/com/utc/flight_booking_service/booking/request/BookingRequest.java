@@ -37,4 +37,7 @@ public class BookingRequest {
     @NotEmpty(message = "PASSENGERS_REQUIRED")
     @Valid
     List<PassengerRequest> passengers;
+
+    @Valid
+    List<BookingAncillaryRequest> bookingAncillaries;
 }

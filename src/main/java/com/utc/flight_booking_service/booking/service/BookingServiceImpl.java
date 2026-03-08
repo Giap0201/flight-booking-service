@@ -1,20 +1,15 @@
 package com.utc.flight_booking_service.booking.service;
 
-import com.utc.flight_booking_service.booking.entity.Booking;
-import com.utc.flight_booking_service.booking.entity.BookingFlight;
-import com.utc.flight_booking_service.booking.entity.Passenger;
-import com.utc.flight_booking_service.booking.entity.Ticket;
+import com.utc.flight_booking_service.booking.entity.*;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.booking.enums.TicketStatus;
 import com.utc.flight_booking_service.booking.mapper.BookingFlightMapper;
 import com.utc.flight_booking_service.booking.mapper.BookingMapper;
 import com.utc.flight_booking_service.booking.mapper.PassengerMapper;
+import com.utc.flight_booking_service.booking.repository.AncillaryCatalogRepository;
 import com.utc.flight_booking_service.booking.repository.BookingRepository;
 import com.utc.flight_booking_service.booking.repository.TicketRepository;
-import com.utc.flight_booking_service.booking.request.AdminBookingSearchRequest;
-import com.utc.flight_booking_service.booking.request.BookingFlightRequest;
-import com.utc.flight_booking_service.booking.request.BookingRequest;
-import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.request.*;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingDetailResponse;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.client.*;
@@ -56,6 +51,7 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
     BookingRepository bookingRepository;
     TicketRepository ticketRepository;
+    AncillaryCatalogRepository ancillaryCatalogRepository;
     BookingMapper bookingMapper;
     PassengerMapper passengerMapper;
     BookingFlightMapper bookingFlightMapper;
@@ -69,10 +65,11 @@ public class BookingServiceImpl implements BookingService {
         UserResponse user = userService.getMyInfo();
         int totalPassengers = request.getPassengers().size();
 
-        // Kiem tra va giu ghe (be1)
+        // 1. Kiem tra va giu ghe (be1)
         for (BookingFlightRequest bookingFlightRequest : request.getFlights()) {
             flightClassService.decreaseSeats(bookingFlightRequest.getFlightClassId(), totalPassengers);
         }
+
         Booking booking = bookingMapper.toBooking(request);
         String pnrCode = handlePnrCode();
         booking.setStatus(BookingStatus.PENDING);
@@ -96,15 +93,36 @@ public class BookingServiceImpl implements BookingService {
         }
 
         List<Ticket> tickets = priceService.calculateTickets(booking, request.getFlights());
-
-        BigDecimal totalBookingAmount = tickets.stream().map(Ticket::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalFare = tickets.stream().map(Ticket::getBaseFare).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalTax = tickets.stream().map(Ticket::getTaxAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalTicketAmount = tickets.stream().map(Ticket::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        tickets.forEach(booking::addTicket);
+        BigDecimal totalAncillaryAmount = BigDecimal.ZERO;
 
+        if (request.getBookingAncillaries() != null && !request.getBookingAncillaries().isEmpty()) {
+            for (BookingAncillaryRequest ancReq : request.getBookingAncillaries()) {
+                AncillaryCatalog catalog = ancillaryCatalogRepository.findById(ancReq.getCatalogId())
+                        .orElseThrow(() -> new AppException(ErrorCode.ANCILLARY_CATALOG_NOT_FOUND));
+                Passenger p = booking.getPassengers().get(ancReq.getPassengerIndex());
+                BookingFlight bf = booking.getBookingFlights().stream()
+                        .filter(f -> f.getSegmentNo() == ancReq.getSegmentNo())
+                        .findFirst()
+                        .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND)); // Định nghĩa thêm mã lỗi nếu chưa có
+                BookingAncillary ancillary = BookingAncillary.builder()
+                        .catalog(catalog)
+                        .passenger(p)
+                        .bookingFlight(bf)
+                        .amount(catalog.getPrice())
+                        .build();
+                totalAncillaryAmount = totalAncillaryAmount.add(catalog.getPrice());
+                booking.addBookingAncillary(ancillary);
+            }
+        }
+
+        BigDecimal totalBookingAmount = totalTicketAmount.add(totalAncillaryAmount);
         booking.setTotalAmount(totalBookingAmount);
         booking.setTotalFareAmount(totalFare);
         booking.setTotalTaxAmount(totalTax);
-        tickets.forEach(booking::addTicket);
         Booking savedBooking = bookingRepository.save(booking);
         return bookingMapper.toBookingCreatedResponse(savedBooking);
     }
