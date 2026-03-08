@@ -77,7 +77,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserResponse updateUser(UserUpdateRequest request, UUID id) {
+    public UserResponse updateUser(AdminUserUpdateRequest request, UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         userMapper.updateUser(user, request);
@@ -89,6 +89,15 @@ public class UserService implements IUserService {
         user.setRoles(new HashSet<>(roles));
         return userMapper.toUserResponse(userRepository.save(user));
 
+    }
+
+    @Override
+    public UserResponse updateInfor(UserUpdateRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        User user = userRepository.findById(UUID.fromString(name)).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        userMapper.updateUser(user, request);
+        return userMapper.toUserResponse(user);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
