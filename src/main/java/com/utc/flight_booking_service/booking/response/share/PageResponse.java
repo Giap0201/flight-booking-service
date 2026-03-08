@@ -1,4 +1,4 @@
-package com.utc.flight_booking_service.booking.response.page;
+package com.utc.flight_booking_service.booking.response.share;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

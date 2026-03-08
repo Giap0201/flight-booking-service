@@ -67,6 +67,8 @@ public enum ErrorCode {
     FORBIDDEN(2025, "Bạn không có quyền truy cập vào đơn đặt chỗ này", HttpStatus.FORBIDDEN),
 
 
+    // TRANSACTION
+    TRANSACTION_NOT_FOUND(2050, "Không tìm thấy Transaction", HttpStatus.NOT_FOUND),
 
 
     //INVENTORY

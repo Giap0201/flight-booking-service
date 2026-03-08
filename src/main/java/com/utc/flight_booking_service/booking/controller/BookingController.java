@@ -2,11 +2,11 @@ package com.utc.flight_booking_service.booking.controller;
 
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
-import com.utc.flight_booking_service.booking.response.BookingDetailsResponse;
-import com.utc.flight_booking_service.booking.response.BookingResponse;
-import com.utc.flight_booking_service.booking.response.BookingSummaryResponse;
-import com.utc.flight_booking_service.booking.response.ClientETicketResponse;
-import com.utc.flight_booking_service.booking.response.page.PageResponse;
+import com.utc.flight_booking_service.booking.response.client.BookingSummaryResponse;
+import com.utc.flight_booking_service.booking.response.client.BookingCreatedResponse;
+import com.utc.flight_booking_service.booking.response.client.BookingDetailResponse;
+import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
+import com.utc.flight_booking_service.booking.response.share.PageResponse;
 import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.common.ApiResponse;
 import jakarta.validation.Valid;
@@ -28,30 +28,30 @@ public class BookingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    ApiResponse<BookingResponse> createBooking(@RequestBody @Valid BookingRequest bookingRequest) {
-        return ApiResponse.<BookingResponse>builder()
+    ApiResponse<BookingCreatedResponse> createBooking(@RequestBody @Valid BookingRequest bookingRequest) {
+        return ApiResponse.<BookingCreatedResponse>builder()
                 .result(bookingService.createBooking(bookingRequest))
                 .build();
     }
 
     @GetMapping("/{id}")
-    ApiResponse<BookingResponse> getBookingById(@PathVariable UUID id) {
-        return ApiResponse.<BookingResponse>builder()
+    ApiResponse<BookingDetailResponse> getBookingById(@PathVariable UUID id) {
+        return ApiResponse.<BookingDetailResponse>builder()
                 .result(bookingService.getBookingById(id))
                 .build();
     }
 
 
     @GetMapping("/{bookingId}/tickets")
-    ApiResponse<List<ClientETicketResponse>> getClientETickets(@PathVariable UUID bookingId) {
-        return ApiResponse.<List<ClientETicketResponse>>builder()
+    ApiResponse<List<ETicketEmailModel>> getClientETickets(@PathVariable UUID bookingId) {
+        return ApiResponse.<List<ETicketEmailModel>>builder()
                 .result(bookingService.getTicketsByBookingId(bookingId))
                 .build();
     }
 
     @GetMapping("/search")
-    ApiResponse<BookingDetailsResponse> getBookingByPnrAndContactEmail(@Valid BookingSearchRequest request) {
-        return ApiResponse.<BookingDetailsResponse>builder()
+    ApiResponse<BookingDetailResponse> getBookingByPnrAndContactEmail(@Valid BookingSearchRequest request) {
+        return ApiResponse.<BookingDetailResponse>builder()
                 .result(bookingService.getBookingClientByPnrAndContactEmail(request))
                 .build();
     }
