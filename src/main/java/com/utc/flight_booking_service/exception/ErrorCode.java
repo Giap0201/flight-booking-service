@@ -71,6 +71,17 @@ public enum ErrorCode {
     TRANSACTION_NOT_FOUND(2050, "Không tìm thấy Transaction", HttpStatus.NOT_FOUND),
 
 
+    //BOOKING_ANCILLARY_CATALOG
+    ANCILLARY_CATALOG_CODE_REQUIRED(2100, "Mã dịch vụ không được để trống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_TYPE_REQUIRED(2101, "Loại dịch vụ không được để trống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_NAME_REQUIRED(2102, "Tên dịch vụ không được để trống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_PRICE_REQUIRED(2103, "Giá dịch vụ không được để trống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_PRICE_INVALID(2104, "Giá dịch vụ phải lớn hơn hoặc bằng 0", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_NOT_FOUND(2105, "Không tìm thấy dịch vụ bổ trợ", HttpStatus.NOT_FOUND),
+    ANCILLARY_CATALOG_EXISTED(2106, "Mã dịch vụ này đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_CODE_EXISTED(2106, "Mã dịch vụ này đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_NAME_EXISTED(2107, "Tên dịch vụ này đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+
     //INVENTORY
     FLIGHT_NOT_FOUND(3000, "Không tìm thấy chuyến bay nào phù hợp", HttpStatus.NOT_FOUND),
     ORIGIN_REQUIRED(3001, "Điểm đi không được để trống", HttpStatus.BAD_REQUEST),
