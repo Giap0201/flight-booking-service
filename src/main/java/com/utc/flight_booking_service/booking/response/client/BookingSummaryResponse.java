@@ -1,4 +1,4 @@
-package com.utc.flight_booking_service.booking.response;
+package com.utc.flight_booking_service.booking.response.client;
 
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import lombok.*;
