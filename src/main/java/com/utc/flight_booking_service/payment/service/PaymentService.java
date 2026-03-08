@@ -4,6 +4,7 @@ package com.utc.flight_booking_service.payment.service;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.booking.service.BookingService;
+import com.utc.flight_booking_service.notification.service.EmailService;
 import com.utc.flight_booking_service.payment.config.VNPayConfig;
 import com.utc.flight_booking_service.payment.entity.Transaction;
 import com.utc.flight_booking_service.payment.enums.PaymentStatus;
@@ -32,6 +33,7 @@ public class PaymentService {
 
     private final BookingService bookingService;
     private final TransactionRepository transactionRepository;
+    private final EmailService emailService;
 
     @Value("${vnpay.tmn-code}")
     private String vnpTmnCode;
@@ -246,6 +248,8 @@ public class PaymentService {
                     }
                     bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                     bookingService.issueTicketsForBooking(booking.getId());
+                    emailService.sendBookingConfirmationEmail(bookingService.getBookingMailData(booking.getId()));
+
                 }
                 String queryString = request.getQueryString();
                 return "http://localhost:3000?" + queryString;

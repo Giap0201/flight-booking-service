@@ -56,6 +56,14 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, JpaSpec
             Pageable pageable);
 
     List<Booking> findByStatusAndCreatedAtBefore(BookingStatus bookingStatus, LocalDateTime fifteenMinsAgo);
+
+    //lay thong tin để gửi về mail
+    @Query("SELECT DISTINCT b FROM Booking b " +
+            "LEFT JOIN FETCH b.passengers p " +
+            "LEFT JOIN FETCH p.tickets t " +
+            "LEFT JOIN FETCH b.bookingFlights bf " +
+            "WHERE b.id = :bookingId")
+    Optional<Booking> findBookingDetailForMail(@Param("bookingId") UUID bookingId);
 }
 
 

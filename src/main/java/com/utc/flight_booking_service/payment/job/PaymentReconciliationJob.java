@@ -30,7 +30,7 @@ public class PaymentReconciliationJob {
     TransactionRepository transactionRepository;
 
     // Chạy ngầm định kỳ 5 phút (300,000 milliseconds) một lần
-    @Scheduled(fixedDelay = 300000)
+    @Scheduled(fixedDelay = 120)
     public void reconcilePendingPayments() {
         log.info("--- BẮT ĐẦU CHẠY JOB ĐỐI SOÁT VNPAY ---");
 
@@ -66,8 +66,7 @@ public class PaymentReconciliationJob {
                     // Ép trạng thái và xuất vé
                     bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                     bookingService.issueTicketsForBooking(booking.getId());
-                }
-                else {
+                } else {
                     // Nếu quá 2 tiếng mà VNPAY báo vẫn chưa trả tiền -> Khách bom vé -> HỦY LUÔN
                     LocalDateTime twoHoursAgo = LocalDateTime.now().minusHours(2);
                     if (booking.getCreatedAt().isBefore(twoHoursAgo)) {
