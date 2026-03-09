@@ -26,7 +26,6 @@ public class PriceServiceImpl implements PriceService {
 
     static final BigDecimal CHILD_RATE = new BigDecimal("0.75"); // 75%
     static final BigDecimal INFANT_RATE = new BigDecimal("0.10"); // 10%
-    static final BigDecimal TAX_RATE = new BigDecimal("0.10");    // 10%
     static final BigDecimal DISCOUNT_RATE = new BigDecimal("0");
     // inject service be1 lay thong tin gia tien, thue
     IFlightClassService flightClassService;

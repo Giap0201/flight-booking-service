@@ -2,7 +2,6 @@ package com.utc.flight_booking_service.booking.mapper;
 
 import com.utc.flight_booking_service.booking.entity.BookingFlight;
 import com.utc.flight_booking_service.booking.request.BookingFlightRequest;
-import com.utc.flight_booking_service.booking.response.BookingFlightResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -16,5 +15,4 @@ public interface BookingFlightMapper {
     @Mapping(target = "originArrivalTime", ignore = true)
     BookingFlight toBookingFlight(BookingFlightRequest request);
 
-    BookingFlightResponse toBookingFlightResponse(BookingFlight bookingFlight);
 }

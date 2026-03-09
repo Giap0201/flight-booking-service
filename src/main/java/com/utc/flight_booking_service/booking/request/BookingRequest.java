@@ -1,10 +1,7 @@
 package com.utc.flight_booking_service.booking.request;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -33,8 +30,6 @@ public class BookingRequest {
 
     String promotionCode;
 
-    UUID userId;
-
     @NotEmpty(message = "FLIGHTS_REQUIRED")
     @Valid
     List<BookingFlightRequest> flights;
@@ -42,4 +37,7 @@ public class BookingRequest {
     @NotEmpty(message = "PASSENGERS_REQUIRED")
     @Valid
     List<PassengerRequest> passengers;
+
+    @Valid
+    List<BookingAncillaryRequest> bookingAncillaries;
 }

@@ -2,7 +2,7 @@ package com.utc.flight_booking_service.booking.mapper;
 
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
-import com.utc.flight_booking_service.booking.response.BookingResponse;
+import com.utc.flight_booking_service.booking.response.client.BookingCreatedResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -20,8 +20,9 @@ public interface BookingMapper {
     @Mapping(target = "totalFareAmount", ignore = true)
     @Mapping(target = "totalTaxAmount", ignore = true)
     @Mapping(target = "totalDiscountAmount", ignore = true)
+    @Mapping(target = "bookingAncillaries", ignore = true)
     Booking toBooking(BookingRequest request);
 
-    @Mapping(source = "bookingFlights", target = "flights")
-    BookingResponse toBookingResponse(Booking booking);
+
+    BookingCreatedResponse toBookingCreatedResponse(Booking booking);
 }
