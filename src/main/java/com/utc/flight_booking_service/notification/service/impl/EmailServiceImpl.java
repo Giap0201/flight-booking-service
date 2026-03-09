@@ -1,6 +1,6 @@
 package com.utc.flight_booking_service.notification.service.impl;
 
-import com.utc.flight_booking_service.notification.dto.BookingEmailResponse;
+import com.utc.flight_booking_service.booking.response.client.BookingDetailResponse;
 import com.utc.flight_booking_service.notification.dto.NewPasswordEmailRequest;
 import com.utc.flight_booking_service.notification.service.EmailService;
 import jakarta.mail.MessagingException;
@@ -27,35 +27,33 @@ public class EmailServiceImpl implements EmailService {
     SpringTemplateEngine templateEngine;
 
     @Async("taskExecutor")
-    // CỰC KỲ QUAN TRỌNG: Giúp hàm này chạy ngầm, không làm giật lag web của khách
-    public void sendBookingConfirmationEmail(BookingEmailResponse bookingData) {
+
+    public void sendBookingConfirmationEmail(BookingDetailResponse bookingData) {
         try {
             log.info("Đang tiến hành gửi email xác nhận cho PNR: {}", bookingData.getPnrCode());
 
 
-            // 1. Tạo Context của Thymeleaf và nhồi cục DTO vào biến "booking"
-            // (Chữ "booking" này phải khớp 100% với th:text="${booking.pnrCode}" trong file HTML)
             Context context = new Context();
             context.setVariable("booking", bookingData);
 
-            // 2. Render file "booking-confirmation.html" thành chuỗi String HTML
-            String htmlContent = templateEngine.process("booking-confirmation", context);
 
-            // 3. Khởi tạo MimeMessage (Dùng cái này mới gửi được HTML và tiếng Việt có dấu)
+            String htmlContent = templateEngine.process("email/booking-confirmation", context);
+
+
             MimeMessage message = mailSender.createMimeMessage();
 
-            // true = multipart (hỗ trợ đính kèm file sau này), UTF-8 = chống lỗi font tiếng Việt
+
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            // 4. Cấu hình các thông số thư
-            helper.setTo(bookingData.getContactEmail()); // Gửi tới email người đặt
-            helper.setSubject("✈️ Xác nhận đặt chỗ thành công - Mã PNR: " + bookingData.getPnrCode());
-            helper.setText(htmlContent, true); // Chữ 'true' ở đây báo cho Gmail biết đây là code HTML
 
-            // 5. Bấm nút gửi
+            helper.setTo(bookingData.getContact().getEmail());
+            helper.setSubject("✈️ Xác nhận đặt chỗ thành công - Mã PNR: " + bookingData.getPnrCode());
+            helper.setText(htmlContent, true);
+
+
             mailSender.send(message);
 
-            log.info("✅ Gửi email thành công tới: {}", bookingData.getContactEmail());
+            log.info("✅ Gửi email thành công tới: {}", bookingData.getContact().getEmail());
 
         } catch (MessagingException e) {
             log.error("❌ Lỗi khi gửi email cho PNR {}: {}", bookingData.getPnrCode(), e.getMessage());
@@ -63,6 +61,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Async("taskExecutor")
     @Override
     public void sendNewPasswordEmail(NewPasswordEmailRequest request) {
         try {

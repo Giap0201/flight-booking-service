@@ -28,10 +28,8 @@ import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
 import com.utc.flight_booking_service.identity.service.IUserService;
 import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
-import com.utc.flight_booking_service.inventory.entity.Flight;
 import com.utc.flight_booking_service.inventory.repository.FlightRepository;
 import com.utc.flight_booking_service.inventory.service.IFlightClassService;
-import com.utc.flight_booking_service.notification.dto.BookingEmailResponse;
 import com.utc.flight_booking_service.payment.dto.response.AdminTransactionResponse;
 import com.utc.flight_booking_service.payment.service.TransactionService;
 import jakarta.transaction.Transactional;
@@ -68,104 +66,6 @@ public class BookingServiceImpl implements BookingService {
     IUserService userService;
     TransactionService transactionService;
 
-    private List<BookingEmailResponse.PassengerTicketInfo> mapPassengerInfo(Booking booking) {
-        if (booking.getPassengers() == null || booking.getPassengers().isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return booking.getPassengers().stream().map(p -> {
-            // 1. Tìm vé tương ứng của hành khách này
-            Ticket matchedTicket = null;
-            if (p.getTickets() != null) {
-                matchedTicket = p.getTickets().stream()
-                        .filter(t -> t.getBooking() != null && t.getBooking().getId().equals(booking.getId()))
-                        .findFirst()
-                        .orElse(null);
-            }
-
-//            // 2. Gom các dịch vụ bổ sung (Hành lý, Suất ăn...) của riêng khách này
-//            List<BookingEmailResponse.AncillaryInfo> passengerAncillaries = new ArrayList<>();
-//            if (booking.getBookingAncillaries() != null) {
-//                passengerAncillaries = booking.getBookingAncillaries().stream()
-//                        // Lọc những dịch vụ thuộc về passenger_id hiện tại
-//                        .filter(ba -> ba.getPassenger() != null && ba.getPassenger().getId().equals(p.getId()))
-//                        .map(ba -> BookingEmailResponse.AncillaryInfo.builder()
-//                                // Giả sử BookingAncillary có liên kết sang AncillaryCatalog để lấy tên
-//                                .name(ba.getCatalog() != null ? ba.getCatalog().getName() : "Dịch vụ bổ sung")
-//                                .price(ba.getAmount())
-//                                .build())
-//                        .toList();
-//            }
-
-            // 3. Xử lý an toàn kiểu Enum/String cho loại khách
-            String type = "N/A";
-            if (p.getType() != null) {
-                type = p.getType().name(); // Dùng .name() nếu getType() trả về Enum
-            }
-
-            // 4. Build chuẩn theo PassengerTicketInfo
-            return BookingEmailResponse.PassengerTicketInfo.builder()
-                    .fullName((p.getLastName() != null ? p.getLastName() : "") + " " +
-                            (p.getFirstName() != null ? p.getFirstName() : ""))
-                    .passengerType(type)
-                    .ticketNumber((matchedTicket != null && matchedTicket.getTicketNumber() != null)
-                            ? matchedTicket.getTicketNumber() : "Chưa xuất vé")
-                    .seatNumber((matchedTicket != null && matchedTicket.getSeatNumber() != null)
-                            ? matchedTicket.getSeatNumber() : "Chưa chọn ghế")
-                    // Lấy chi tiết tài chính từ bảng Tickets
-                    .baseFare(matchedTicket != null ? matchedTicket.getBaseFare() : BigDecimal.ZERO)
-                    .taxAmount(matchedTicket != null ? matchedTicket.getTaxAmount() : BigDecimal.ZERO)
-                    // Đưa list dịch vụ vào
-                    .ancillaries(null)//passengerAncillaries)
-                    .build();
-        }).toList();
-    }
-
-    @Override
-    public BookingEmailResponse getBookingMailData(UUID bookingId) {
-
-        Booking booking = bookingRepository.findBookingDetailForMail(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
-
-        // 2. Lấy danh sách ID để quét Khối Danh mục
-        List<UUID> flightIds = booking.getBookingFlights().stream()
-                .map(BookingFlight::getFlightId).distinct().toList();
-
-        // 3. Lấy Khối Danh mục (Một cú Join duy nhất cho cụm bên kia)
-        List<Flight> masterFlights = flightRepository.findAllFlightMasterData(flightIds);
-
-        // 4. Ghép nối cực nhanh
-        return BookingEmailResponse.builder()
-                .pnrCode(booking.getPnrCode())
-                .contactName(booking.getContactName())
-                .totalAmount(booking.getTotalAmount())
-                .flights(booking.getBookingFlights().stream().map(bf -> {
-                    // Chỉ cần tìm 1 lần trong masterFlights là có cả Airline, Airport, Class
-                    Flight fullFlight = masterFlights.stream()
-                            .filter(f -> f.getId().equals(bf.getFlightId()))
-                            .findFirst().orElse(null);
-
-                    return BookingEmailResponse.FlightInfo.builder()
-                            .flightNumber(bf.getOriginFlightNumber())
-                            .airlineName(fullFlight.getAirline().getName())
-                            .airlineLogoUrl(fullFlight.getAirline().getLogoUrl())
-                            .originCity(fullFlight.getOrigin().getCityCode())
-                            .destinationCity(fullFlight.getDestination().getCityCode())
-                            .departureTime(bf.getOriginDepartureTime())
-                            .arrivalTime(bf.getOriginArrivalTime())
-                            // Tìm đúng hạng vé khách đã đặt trong list FlightClasses của Flight đó
-                            .classType((fullFlight != null && fullFlight.getFlightClasses() != null)
-                                    ? fullFlight.getFlightClasses().stream()
-                                    .filter(fc -> fc.getId().equals(bf.getFlightClassId()))
-                                    .findFirst()
-                                    .map(fc -> fc.getClassType().name())
-                                    .orElse("N/A")
-                                    : "N/A")
-                            .build();
-                }).toList())
-                .passengers(mapPassengerInfo(booking))
-                .build();
-    }
 
     @Override
     public BookingCreatedResponse createBooking(BookingRequest request) {

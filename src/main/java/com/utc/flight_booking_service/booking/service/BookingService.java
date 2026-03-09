@@ -12,7 +12,6 @@ import com.utc.flight_booking_service.booking.response.client.BookingDetailRespo
 import com.utc.flight_booking_service.booking.response.client.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
 import com.utc.flight_booking_service.booking.response.share.PageResponse;
-import com.utc.flight_booking_service.notification.dto.BookingEmailResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -59,7 +58,4 @@ public interface BookingService {
 
     // Lay thong tin booking danh cho admin (ca transaction)
     AdminBookingDetailResponse getBookingDetailsForAdmin(UUID id);
-
-    //lay thong tin de mail tra ve
-    public BookingEmailResponse getBookingMailData(UUID bookingId);
 }

@@ -2,135 +2,168 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Xác nhận đặt vé máy bay</title>
+    <title>Xác nhận đặt vé điện tử</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f5f6; margin: 0; padding: 20px; }
-        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .email-container { max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .header { background-color: #00558F; color: #ffffff; padding: 20px; text-align: center; }
-        .content { padding: 20px; color: #333333; }
-        .pnr-box { background-color: #e8f4fd; border: 1px dashed #00558F; padding: 15px; text-align: center; margin-bottom: 20px; border-radius: 4px; }
-        .pnr-code { font-size: 24px; font-weight: bold; color: #00558F; letter-spacing: 2px; }
-        .section-title { font-size: 16px; font-weight: bold; border-bottom: 2px solid #eeeeee; padding-bottom: 5px; margin-top: 20px; color: #00558F; }
-        .info-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .info-table th, .info-table td { padding: 8px; text-align: left; border-bottom: 1px solid #eeeeee; font-size: 14px; }
-        .info-table th { color: #666666; width: 40%; }
-        .total-amount { font-size: 18px; font-weight: bold; color: #D32F2F; text-align: right; margin-top: 15px; }
+        .content { padding: 20px; color: #333333; line-height: 1.5; }
+        .section-title { font-size: 16px; font-weight: bold; border-bottom: 2px solid #00558F; padding-bottom: 5px; margin-top: 25px; margin-bottom: 15px; color: #00558F; text-transform: uppercase; }
+
+        /* Box Thông tin chung */
+        .general-info-box { background-color: #e8f4fd; border: 1px solid #b3d7f5; border-radius: 6px; padding: 15px; }
+        .info-table-top { width: 100%; border: none; font-size: 14px; }
+        .info-table-top td { padding: 5px 0; width: 50%; }
+        .info-label { color: #555; display: inline-block; min-width: 100px; }
+        .info-value { font-weight: bold; color: #333; }
+        .pnr-highlight { font-size: 20px; color: #D32F2F; letter-spacing: 1px; font-weight: bold; }
+        .status-badge { background-color: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #c8e6c9; }
+
+        /* Table chung cho vé */
+        .data-table { width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: 14px; }
+        .data-table th, .data-table td { padding: 8px 10px; border: 1px solid #eeeeee; text-align: left; }
+        .data-table th { background-color: #f9f9f9; color: #555; width: 35%; }
+
+        /* Box Hành khách & Vé */
+        .passenger-box { border: 1px solid #ddd; border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
+        .passenger-header { background-color: #f0f0f0; padding: 10px 15px; font-weight: bold; font-size: 15px; border-bottom: 1px solid #ddd; }
+        .ticket-item { padding: 15px; border-bottom: 2px dashed #ddd; }
+        .ticket-item:last-child { border-bottom: none; }
+        .flight-badge { display: inline-block; background-color: #00558F; color: white; padding: 4px 10px; border-radius: 4px; font-size: 13px; font-weight: bold; margin-bottom: 10px; }
+
+        .total-amount-box { background-color: #fff9e6; border: 1px dashed #ffd54f; padding: 15px; text-align: right; border-radius: 6px; margin-top: 20px; }
+        .total-amount-text { font-size: 22px; font-weight: bold; color: #D32F2F; }
         .footer { background-color: #f4f5f6; padding: 15px; text-align: center; font-size: 12px; color: #888888; }
-        .flight-route { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 10px; }
-        .airline-logo { max-height: 24px; vertical-align: middle; margin-right: 8px; }
     </style>
 </head>
 <body>
 
 <div class="email-container">
     <div class="header">
-        <h2>Xác Nhận Đặt Chỗ</h2>
-        <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
+        <h2 style="margin: 0;">VÉ ĐIỆN TỬ & XÁC NHẬN ĐẶT CHỖ</h2>
     </div>
 
     <div class="content">
-        <p>Xin chào <strong th:text="${booking.contactName}">Tên Khách Hàng</strong>,</p>
-        <p>Đơn đặt vé của bạn đã được thanh toán thành công. Dưới đây là thông tin chi tiết:</p>
+        <p>Xin chào <strong th:text="${booking.contact.name}">Tên Khách Hàng</strong>,</p>
+        <p>Đơn đặt vé của bạn đã được xử lý thành công. Dưới đây là thông tin chi tiết vé điện tử của bạn:</p>
 
-        <div class="pnr-box">
-            Mã đặt chỗ (PNR)<br>
-            <span class="pnr-code" th:text="${booking.pnrCode}">ABCDEF</span>
-        </div>
-
-        <div class="section-title">✈️ THÔNG TIN CHUYẾN BAY</div>
-
-        <div style="margin-bottom: 20px;" th:each="flight, iterStat : ${booking.flights}"
-             th:if="${booking.flights != null}">
-            <div class="flight-route">
-                <span th:text="'Chặng ' + ${iterStat.count} + ': '">Chặng 1: </span>
-                <span th:text="${flight.originCity} + ' (' + ${flight.originCode} + ')'">Hà Nội (HAN)</span>
-                ➔
-                <span th:text="${flight.destinationCity} + ' (' + ${flight.destinationCode} + ')'">TP.HCM (SGN)</span>
-            </div>
-
-            <table class="info-table">
+        <div class="section-title">📌 THÔNG TIN ĐƠN HÀNG</div>
+        <div class="general-info-box">
+            <table class="info-table-top">
                 <tr>
-                    <th>Chuyến bay:</th>
                     <td>
-                        <img alt="Logo"
-                             class="airline-logo" th:if="${flight.airlineLogoUrl != null and !flight.airlineLogoUrl.isEmpty()}" th:src="${flight.airlineLogoUrl}"/>
-                        <strong th:text="${flight.flightNumber}">VN123</strong>
-                        (<span th:text="${flight.airlineName}">Vietnam Airlines</span>)
+                        <span class="info-label">Mã đặt chỗ (PNR):</span>
+                        <span class="pnr-highlight" th:text="${booking.pnrCode}">ABCDEF</span>
+                    </td>
+                    <td>
+                        <span class="info-label">Người liên hệ:</span>
+                        <span class="info-value" th:text="${booking.contact.name}">Nguyễn Văn A</span>
                     </td>
                 </tr>
                 <tr>
-                    <th>Hạng vé:</th>
-                    <td th:text="${flight.classType}">ECONOMY</td>
-                </tr>
-                <tr>
-                    <th>Khởi hành:</th>
-                    <td th:text="${flight.departureTime != null ? #temporals.format(flight.departureTime, 'dd/MM/yyyy HH:mm') : 'N/A'}">
-                        15/03/2026 08:00
+                    <td>
+                        <span class="info-label">Trạng thái:</span>
+                        <span class="status-badge" th:text="${booking.status}">CONFIRMED</span>
+                    </td>
+                    <td>
+                        <span class="info-label">Email:</span>
+                        <span class="info-value" th:text="${booking.contact.email}">email@domain.com</span>
                     </td>
                 </tr>
                 <tr>
-                    <th>Đến nơi:</th>
-                    <td th:text="${flight.arrivalTime != null ? #temporals.format(flight.arrivalTime, 'dd/MM/yyyy HH:mm') : 'N/A'}">
-                        15/03/2026 10:00
+                    <td>
+                    </td>
+                    <td>
+                        <span class="info-label">Số điện thoại:</span>
+                        <span class="info-value"
+                              th:text="${booking.contact.phone != null ? booking.contact.phone : 'N/A'}">090xxxxxxx</span>
                     </td>
                 </tr>
             </table>
         </div>
 
-        <div class="section-title">👤 THÔNG TIN HÀNH KHÁCH & VÉ</div>
+        <div class="section-title">👤 CHI TIẾT VÉ THEO HÀNH KHÁCH</div>
 
         <div th:if="${booking.passengers != null}">
-            <table class="info-table" style="margin-bottom: 15px; background-color: #fafafa; border: 1px solid #ddd;"
-                   th:each="passenger : ${booking.passengers}">
-                <tr>
-                    <th>Hành khách:</th>
-                    <td>
-                        <strong th:text="${passenger.fullName}">NGUYEN VAN A</strong>
-                        (<span th:text="${passenger.passengerType}">ADULT</span>)
-                    </td>
-                </tr>
-                <tr>
-                    <th>Số vé / Chỗ ngồi:</th>
-                    <td>
-                        <span th:text="${passenger.ticketNumber != null ? passenger.ticketNumber : 'Đang xử lý'}">123456789</span>
-                        /
-                        <strong th:text="${passenger.seatNumber != null ? passenger.seatNumber : 'Chưa chọn'}">12A</strong>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Chi tiết giá:</th>
-                    <td>
-                        Giá vé:
-                        <span th:text="${passenger.baseFare != null ? #numbers.formatDecimal(passenger.baseFare, 0, 'COMMA', 0, 'POINT') : '0'}">1,000,000</span>
-                        <span th:text="${booking.currency != null ? booking.currency : 'VND'}">VND</span><br>
-                        Thuế phí:
-                        <span th:text="${passenger.taxAmount != null ? #numbers.formatDecimal(passenger.taxAmount, 0, 'COMMA', 0, 'POINT') : '0'}">200,000</span>
-                        <span th:text="${booking.currency != null ? booking.currency : 'VND'}">VND</span>
-                    </td>
-                </tr>
-                <tr th:if="${passenger.ancillaries != null and !passenger.ancillaries.isEmpty()}">
-                    <th>Dịch vụ mua thêm:</th>
-                    <td>
-                        <ul style="margin: 0; padding-left: 15px;">
-                            <li th:each="ancillary : ${passenger.ancillaries}"
-                                th:text="${ancillary.name} + ' (' + (${ancillary.price != null ? #numbers.formatDecimal(ancillary.price, 0, 'COMMA', 0, 'POINT') : '0'}) + ' ' + (${booking.currency != null ? booking.currency : 'VND'}) + ')'">
-                                Hành lý 20kg (200,000 VND)
-                            </li>
-                        </ul>
-                    </td>
-                </tr>
-            </table>
+            <div class="passenger-box" th:each="passenger : ${booking.passengers}">
+
+                <div class="passenger-header">
+                    Hành khách: <span style="color: #00558F; text-transform: uppercase;"
+                                      th:text="${(passenger.lastName != null ? passenger.lastName : '') + ' ' + (passenger.firstName != null ? passenger.firstName : '')}">NGUYEN VAN A</span>
+                    <span style="font-weight: normal; font-size: 13px; color: #666;" th:if="${passenger.type != null}"
+                          th:text="'(' + ${passenger.type} + ')'">(ADULT)</span>
+                </div>
+
+                <div th:if="${passenger.tickets != null}">
+                    <div class="ticket-item" th:each="ticket : ${passenger.tickets}">
+
+                        <div class="flight-badge">
+                            ✈️ Chuyến bay: <span th:text="${ticket.flightNumber}">VN123</span>
+                        </div>
+
+                        <table class="data-table">
+                            <tr>
+                                <th>Số vé điện tử:</th>
+                                <td><strong style="color: #087f23; font-size: 15px;"
+                                            th:text="${ticket.ticketNumber != null ? ticket.ticketNumber : 'Chưa xuất vé'}">123456789</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Hành trình:</th>
+                                <td>
+                                    <strong th:text="${ticket.departureAirport} + ' ➔ ' + ${ticket.arrivalAirport}">HAN
+                                        ➔ SGN</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Thời gian bay:</th>
+                                <td>
+                                    Đi: <span
+                                        th:text="${ticket.departureTime != null ? #temporals.format(ticket.departureTime, 'dd/MM/yyyy HH:mm') : 'N/A'}">15/03/2026 08:00</span><br>
+                                    Đến: <span
+                                        th:text="${ticket.arrivalTime != null ? #temporals.format(ticket.arrivalTime, 'dd/MM/yyyy HH:mm') : 'N/A'}">15/03/2026 10:00</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Hạng vé / Chỗ ngồi:</th>
+                                <td>
+                                    Hạng: <strong th:text="${ticket.classType != null ? ticket.classType : 'N/A'}">ECONOMY</strong>
+                                    |
+                                    Ghế: <strong style="color: #D32F2F;"
+                                                 th:text="${ticket.seatNumber != null ? ticket.seatNumber : 'Chưa chọn'}">12A</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Trạng thái vé:</th>
+                                <td th:text="${ticket.status}">ISSUED</td>
+                            </tr>
+                            <tr>
+                                <th>Giá vé (Bao gồm thuế phí):</th>
+                                <td>
+                                    <strong th:text="${ticket.totalAmount != null ? #numbers.formatDecimal(ticket.totalAmount, 0, 'COMMA', 0, 'POINT') : '0'}">1,000,000</strong>
+                                    <span th:text="${booking.currency != null ? booking.currency : 'VND'}">VND</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
-        <div class="total-amount">
-            Tổng thanh toán:
-            <span th:text="${booking.totalAmount != null ? #numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') : '0'}">2,500,000</span>
-            <span th:text="${booking.currency != null ? booking.currency : 'VND'}">VND</span>
+        <div class="total-amount-box">
+            <span style="font-size: 16px; color: #555;">TỔNG THANH TOÁN:</span><br>
+            <span class="total-amount-text"
+                  th:text="${booking.totalAmount != null ? #numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') : '0'}">2,500,000</span>
+            <span class="total-amount-text" th:text="${booking.currency != null ? booking.currency : 'VND'}">VND</span>
         </div>
     </div>
 
     <div class="footer">
-        <p>Vui lòng mang theo giấy tờ tùy thân và có mặt tại sân bay trước giờ khởi hành ít nhất 2 tiếng.</p>
+        <p>Hành khách vui lòng xuất trình Số vé điện tử này cùng Giấy tờ tùy thân hợp lệ tại quầy làm thủ tục ở sân
+            bay.</p>
+        <p>Cửa lên máy bay sẽ đóng 15 phút trước giờ khởi hành. Quý khách vui lòng có mặt tại sân bay ít nhất 2
+            tiếng.</p>
         <p>Đây là email tự động, vui lòng không trả lời.</p>
     </div>
 </div>

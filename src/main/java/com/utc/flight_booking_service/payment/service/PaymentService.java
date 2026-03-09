@@ -11,6 +11,8 @@ import com.utc.flight_booking_service.payment.enums.PaymentStatus;
 import com.utc.flight_booking_service.payment.repository.TransactionRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,6 +33,7 @@ import java.util.*;
 @Transactional
 public class PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
     private final BookingService bookingService;
     private final TransactionRepository transactionRepository;
     private final EmailService emailService;
@@ -201,6 +204,9 @@ public class PaymentService {
             if ("00".equals(responseCode)) {
                 bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                 bookingService.issueTicketsForBooking(booking.getId());
+                emailService.sendBookingConfirmationEmail(bookingService.getBookingById(booking.getId()));
+                log.info("Thanh cong thanh toan");
+
             }
             response.put("RspCode", "00");
             response.put("Message", "Confirm Success");
@@ -248,7 +254,7 @@ public class PaymentService {
                     }
                     bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                     bookingService.issueTicketsForBooking(booking.getId());
-                    emailService.sendBookingConfirmationEmail(bookingService.getBookingMailData(booking.getId()));
+
 
                 }
                 String queryString = request.getQueryString();

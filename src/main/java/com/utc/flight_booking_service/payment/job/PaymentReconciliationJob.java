@@ -30,7 +30,7 @@ public class PaymentReconciliationJob {
     TransactionRepository transactionRepository;
 
     // Chạy ngầm định kỳ 5 phút (300,000 milliseconds) một lần
-    @Scheduled(fixedDelay = 120)
+    @Scheduled(fixedDelay = 300000)
     public void reconcilePendingPayments() {
         log.info("--- BẮT ĐẦU CHẠY JOB ĐỐI SOÁT VNPAY ---");
 

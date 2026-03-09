@@ -34,7 +34,6 @@ public class BookingEmailResponse {
     public static class FlightInfo {
         private String flightNumber;
         private String airlineName;
-        private String airlineLogoUrl;
         private String originCode;
         private String originCity;
         private String destinationCode;
@@ -49,7 +48,15 @@ public class BookingEmailResponse {
     public static class PassengerTicketInfo {
         private String fullName;
         private String passengerType;
+        private List<TicketItemInfo> tickets;
+    }
+
+    @Data
+    @Builder
+    public static class TicketItemInfo {
         private String ticketNumber;
+        private String flightNumber;
+        private String route;
         private String seatNumber;
         private BigDecimal baseFare;
         private BigDecimal taxAmount;
@@ -62,4 +69,5 @@ public class BookingEmailResponse {
         private String name;
         private BigDecimal price;
     }
+
 }
