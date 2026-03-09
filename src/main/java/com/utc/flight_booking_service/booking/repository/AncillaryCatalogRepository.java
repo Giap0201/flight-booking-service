@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface AncillaryCatalogRepository extends JpaRepository<AncillaryCatalog, UUID>, JpaSpecificationExecutor<AncillaryCatalog> {
@@ -14,4 +15,6 @@ public interface AncillaryCatalogRepository extends JpaRepository<AncillaryCatal
     boolean existsByName(String name);
 
     List<AncillaryCatalog> findByStatus(AncillaryCatalogStatus status);
+
+    Optional<AncillaryCatalog> findByIdAndStatus(UUID id, AncillaryCatalogStatus status);
 }
