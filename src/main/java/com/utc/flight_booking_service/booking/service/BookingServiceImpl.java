@@ -107,7 +107,7 @@ public class BookingServiceImpl implements BookingService {
                 BookingFlight bf = booking.getBookingFlights().stream()
                         .filter(f -> f.getSegmentNo() == ancReq.getSegmentNo())
                         .findFirst()
-                        .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND)); // Định nghĩa thêm mã lỗi nếu chưa có
+                        .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
                 BookingAncillary ancillary = BookingAncillary.builder()
                         .catalog(catalog)
                         .passenger(p)
@@ -391,8 +391,22 @@ public class BookingServiceImpl implements BookingService {
                                 .filter(bf -> bf.getFlightClassId().equals(ticket.getFlightClassId()))
                                 .findFirst()
                                 .orElse(null);
+
                         FlightPriceResponseDTO be1Info = flightCache.computeIfAbsent(
                                 ticket.getFlightClassId(), flightClassService::getFlightPrice);
+
+                        List<AncillaryItemResponse> ancillaries = Optional.ofNullable(booking.getBookingAncillaries())
+                                .orElseGet(Collections::emptyList)
+                                .stream()
+                                .filter(anc -> anc.getPassenger().getId().equals(passenger.getId()))
+                                .filter(anc -> anc.getBookingFlight().getFlightClassId().equals(ticket.getFlightClassId()))
+                                .map(anc -> AncillaryItemResponse.builder()
+                                        .catalogName(anc.getCatalog().getName())
+                                        .type(anc.getCatalog().getType())
+                                        .amount(anc.getAmount())
+                                        .build())
+                                .toList();
+
                         return TicketDetailResponse.builder()
                                 .ticketNumber(ticket.getTicketNumber())
                                 .status(ticket.getStatus())
@@ -404,6 +418,7 @@ public class BookingServiceImpl implements BookingService {
                                 .departureAirport(be1Info.getOrigin())
                                 .arrivalAirport(be1Info.getDestination())
                                 .classType(be1Info.getClassType())
+                                .ancillaries(ancillaries)
                                 .build();
                     }).toList();
 
