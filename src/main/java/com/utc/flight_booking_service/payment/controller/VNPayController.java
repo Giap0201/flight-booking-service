@@ -8,10 +8,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.Map;
@@ -45,5 +42,13 @@ public class VNPayController {
     public ResponseEntity<Map<String, String>> vnpayIpn(HttpServletRequest request) {
         Map<String, String> result = paymentService.processIpn(request);
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/verify-status/{pnrCode}")
+    public ApiResponse<Map<String, String>> verifyPaymentStatusImmediately(@PathVariable String pnrCode) {
+        Map<String, String> result = paymentService.verifyPaymentStatusImmediately(pnrCode);
+        return ApiResponse.<Map<String, String>>builder()
+                .result(result)
+                .build();
     }
 }

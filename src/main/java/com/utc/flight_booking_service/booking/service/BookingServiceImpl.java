@@ -1,20 +1,16 @@
 package com.utc.flight_booking_service.booking.service;
 
-import com.utc.flight_booking_service.booking.entity.Booking;
-import com.utc.flight_booking_service.booking.entity.BookingFlight;
-import com.utc.flight_booking_service.booking.entity.Passenger;
-import com.utc.flight_booking_service.booking.entity.Ticket;
+import com.utc.flight_booking_service.booking.entity.*;
+import com.utc.flight_booking_service.booking.enums.AncillaryCatalogStatus;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.booking.enums.TicketStatus;
 import com.utc.flight_booking_service.booking.mapper.BookingFlightMapper;
 import com.utc.flight_booking_service.booking.mapper.BookingMapper;
 import com.utc.flight_booking_service.booking.mapper.PassengerMapper;
+import com.utc.flight_booking_service.booking.repository.AncillaryCatalogRepository;
 import com.utc.flight_booking_service.booking.repository.BookingRepository;
 import com.utc.flight_booking_service.booking.repository.TicketRepository;
-import com.utc.flight_booking_service.booking.request.AdminBookingSearchRequest;
-import com.utc.flight_booking_service.booking.request.BookingFlightRequest;
-import com.utc.flight_booking_service.booking.request.BookingRequest;
-import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.request.*;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingDetailResponse;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.client.*;
@@ -56,6 +52,7 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
     BookingRepository bookingRepository;
     TicketRepository ticketRepository;
+    AncillaryCatalogRepository ancillaryCatalogRepository;
     BookingMapper bookingMapper;
     PassengerMapper passengerMapper;
     BookingFlightMapper bookingFlightMapper;
@@ -69,10 +66,11 @@ public class BookingServiceImpl implements BookingService {
         UserResponse user = userService.getMyInfo();
         int totalPassengers = request.getPassengers().size();
 
-        // Kiem tra va giu ghe (be1)
+        // 1. Kiem tra va giu ghe (be1)
         for (BookingFlightRequest bookingFlightRequest : request.getFlights()) {
             flightClassService.decreaseSeats(bookingFlightRequest.getFlightClassId(), totalPassengers);
         }
+
         Booking booking = bookingMapper.toBooking(request);
         String pnrCode = handlePnrCode();
         booking.setStatus(BookingStatus.PENDING);
@@ -96,15 +94,37 @@ public class BookingServiceImpl implements BookingService {
         }
 
         List<Ticket> tickets = priceService.calculateTickets(booking, request.getFlights());
-
-        BigDecimal totalBookingAmount = tickets.stream().map(Ticket::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalFare = tickets.stream().map(Ticket::getBaseFare).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalTax = tickets.stream().map(Ticket::getTaxAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalTicketAmount = tickets.stream().map(Ticket::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        tickets.forEach(booking::addTicket);
+        BigDecimal totalAncillaryAmount = BigDecimal.ZERO;
 
+        if (request.getBookingAncillaries() != null && !request.getBookingAncillaries().isEmpty()) {
+            for (BookingAncillaryRequest ancReq : request.getBookingAncillaries()) {
+                AncillaryCatalog catalog = ancillaryCatalogRepository.findByIdAndStatus(ancReq.getCatalogId(), AncillaryCatalogStatus.ACTIVE)
+                        .orElseThrow(() -> new AppException(ErrorCode.ANCILLARY_CATALOG_NOT_FOUND));
+                Passenger p = booking.getPassengers().get(ancReq.getPassengerIndex());
+                BookingFlight bf = booking.getBookingFlights().stream()
+                        .filter(f -> f.getSegmentNo() == ancReq.getSegmentNo())
+                        .findFirst()
+                        .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
+                BookingAncillary ancillary = BookingAncillary.builder()
+                        .booking(booking)
+                        .catalog(catalog)
+                        .passenger(p)
+                        .bookingFlight(bf)
+                        .amount(catalog.getPrice())
+                        .build();
+                totalAncillaryAmount = totalAncillaryAmount.add(catalog.getPrice());
+                booking.addBookingAncillary(ancillary);
+            }
+        }
+
+        BigDecimal totalBookingAmount = totalTicketAmount.add(totalAncillaryAmount);
         booking.setTotalAmount(totalBookingAmount);
         booking.setTotalFareAmount(totalFare);
         booking.setTotalTaxAmount(totalTax);
-        tickets.forEach(booking::addTicket);
         Booking savedBooking = bookingRepository.save(booking);
         return bookingMapper.toBookingCreatedResponse(savedBooking);
     }
@@ -117,30 +137,19 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public void cancelExpiredBookings() {
-        LocalDateTime now = LocalDateTime.now();
-        List<Booking> expiredBookings = bookingRepository.findByStatusAndExpireAtBefore(BookingStatus.PENDING, now);
-        if (expiredBookings.isEmpty()) {
-            log.info("Không có booking quá hạn");
-            return;
-        }
-        log.info("Tìm thấy {} booking quá hạn, bắt đầu huỷ", expiredBookings.size());
+    @Transactional
+    public List<Booking> getExpiredBookingsByStatus(BookingStatus bookingStatus) {
+        return bookingRepository.findByStatusAndExpireAtBefore(bookingStatus, LocalDateTime.now());
+    }
 
-        for (Booking booking : expiredBookings) {
-            booking.setStatus(BookingStatus.CANCELLED);
-            booking.getTickets().forEach(ticket -> {
-                ticket.setStatus(TicketStatus.CANCELLED);
-            });
-            int totalPassengers = booking.getPassengers().size();
-            for (BookingFlight bookingFlight : booking.getBookingFlights()) {
-                try {
-                    flightClassService.increaseSeats(bookingFlight.getFlightClassId(), totalPassengers);
-                    log.info("Đã trả lại {} ghế cho chuyến bay {}", totalPassengers, bookingFlight.getFlightClassId());
-                } catch (AppException e) {
-                    log.error("Lỗi khi trả ghế cho chuyến bay {}: {}", bookingFlight.getFlightClassId(), e.getMessage());
-                }
-            }
-        }
+
+    @Override
+    @Transactional // Bắt buộc phải có để giữ Session mở trong suốt quá trình hủy 1 vé
+    public void cancelSingleBookingBySystem(UUID bookingId) {
+        Booking booking = getBookingEntityById(bookingId);
+
+        log.info("Tiến hành hủy PNR: {} và nhả ghế...", booking.getPnrCode());
+        processCancellationLogic(booking);
     }
 
     @Override
@@ -274,19 +283,9 @@ public class BookingServiceImpl implements BookingService {
             log.error("Không thể hủy vé vì trạng thái hiện tại là: {}", booking.getStatus());
             throw new AppException(ErrorCode.CANNOT_CANCEL_BOOKING);
         }
-        booking.setStatus(BookingStatus.CANCELLED);
-        booking.getTickets().forEach(ticket -> ticket.setStatus((TicketStatus.CANCELLED)));
-        int totalPassengers = booking.getPassengers().size();
-        for (BookingFlight bookingFlight : booking.getBookingFlights()) {
-            try {
-                flightClassService.increaseSeats(bookingFlight.getFlightClassId(), totalPassengers);
-                log.info("Đã trả lại {} ghế cho chuyến bay {}", totalPassengers, bookingFlight.getFlightClassId());
-            } catch (AppException e) {
-                log.error("Lỗi khi trả ghế cho chuyến bay {}: {}", bookingFlight.getFlightClassId(), e.getMessage());
-            }
-        }
-        bookingRepository.save(booking);
+        processCancellationLogic(booking);
         log.info("User {} đã tự hủy thành công Booking {}", user.getId(), booking.getPnrCode());
+
     }
 
     @Override
@@ -373,8 +372,22 @@ public class BookingServiceImpl implements BookingService {
                                 .filter(bf -> bf.getFlightClassId().equals(ticket.getFlightClassId()))
                                 .findFirst()
                                 .orElse(null);
+
                         FlightPriceResponseDTO be1Info = flightCache.computeIfAbsent(
                                 ticket.getFlightClassId(), flightClassService::getFlightPrice);
+
+                        List<AncillaryItemResponse> ancillaries = Optional.ofNullable(booking.getBookingAncillaries())
+                                .orElseGet(Collections::emptyList)
+                                .stream()
+                                .filter(anc -> anc.getPassenger().getId().equals(passenger.getId()))
+                                .filter(anc -> anc.getBookingFlight().getFlightClassId().equals(ticket.getFlightClassId()))
+                                .map(anc -> AncillaryItemResponse.builder()
+                                        .catalogName(anc.getCatalog().getName())
+                                        .type(anc.getCatalog().getType())
+                                        .amount(anc.getAmount())
+                                        .build())
+                                .toList();
+
                         return TicketDetailResponse.builder()
                                 .ticketNumber(ticket.getTicketNumber())
                                 .status(ticket.getStatus())
@@ -386,6 +399,7 @@ public class BookingServiceImpl implements BookingService {
                                 .departureAirport(be1Info.getOrigin())
                                 .arrivalAirport(be1Info.getDestination())
                                 .classType(be1Info.getClassType())
+                                .ancillaries(ancillaries)
                                 .build();
                     }).toList();
 
@@ -435,5 +449,20 @@ public class BookingServiceImpl implements BookingService {
             summary.setDepartureTime(firstBookingFlight.getOriginDepartureTime());
         }
         return summary;
+    }
+
+    private void processCancellationLogic(Booking booking) {
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.getTickets().forEach(ticket -> ticket.setStatus(TicketStatus.CANCELLED));
+
+        int totalPassengers = booking.getPassengers().size();
+        for (BookingFlight bookingFlight : booking.getBookingFlights()) {
+            try {
+                flightClassService.increaseSeats(bookingFlight.getFlightClassId(), totalPassengers);
+            } catch (AppException e) {
+                log.error("Lỗi khi trả ghế cho chuyến bay {}: {}", bookingFlight.getFlightClassId(), e.getMessage());
+            }
+        }
+        bookingRepository.save(booking);
     }
 }

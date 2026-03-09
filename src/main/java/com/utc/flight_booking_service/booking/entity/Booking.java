@@ -97,6 +97,16 @@ public class Booking extends BaseEntity {
     )
     @Builder.Default
     @ToString.Exclude
+    List<BookingAncillary> bookingAncillaries = new ArrayList<>();
+
+    @OneToMany(
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            mappedBy = "booking",
+            orphanRemoval = true
+    )
+    @Builder.Default
+    @ToString.Exclude
     List<Ticket> tickets = new ArrayList<>();
 
     public void addPassenger(Passenger passenger) {
@@ -121,6 +131,14 @@ public class Booking extends BaseEntity {
         }
         tickets.add(ticket);
         ticket.setBooking(this);
+    }
+
+    public void addBookingAncillary(BookingAncillary bookingAncillary) {
+        if (this.bookingAncillaries == null) {
+            this.bookingAncillaries = new ArrayList<>();
+        }
+        bookingAncillaries.add(bookingAncillary);
+        bookingAncillary.setBooking(this);
     }
 
 }

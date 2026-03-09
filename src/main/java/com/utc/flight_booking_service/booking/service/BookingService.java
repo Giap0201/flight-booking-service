@@ -7,9 +7,9 @@ import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingDetailResponse;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummaryResponse;
-import com.utc.flight_booking_service.booking.response.client.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingCreatedResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingDetailResponse;
+import com.utc.flight_booking_service.booking.response.client.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
 import com.utc.flight_booking_service.booking.response.share.PageResponse;
 
@@ -24,8 +24,11 @@ public interface BookingService {
     // Lay booking theo id
     BookingDetailResponse getBookingById(UUID id);
 
-    // Tu dong huy booking khi chua thanh toan sau 15p
-    void cancelExpiredBookings();
+    // Lay danh sach ve co trang thai gi do
+    List<Booking> getExpiredBookingsByStatus(BookingStatus bookingStatus);
+
+    // Huy ve het han
+    void cancelSingleBookingBySystem(UUID bookingId);
 
     // Xoa booking da huy trong 30 ngay
     int deleteByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime createdAt);
@@ -57,5 +60,6 @@ public interface BookingService {
     PageResponse<AdminBookingSummaryResponse> searchBookingsForAdmin(AdminBookingSearchRequest request, int page, int size);
 
     // Lay thong tin booking danh cho admin (ca transaction)
-    AdminBookingDetailResponse getBookingDetailsForAdmin(UUID id) ;
+    AdminBookingDetailResponse getBookingDetailsForAdmin(UUID id);
+
 }

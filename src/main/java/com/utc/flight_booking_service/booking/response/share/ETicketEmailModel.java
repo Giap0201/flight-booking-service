@@ -29,9 +29,8 @@ public class ETicketEmailModel {
     LocalDateTime arrivalTime;
 
     FlightClassType classType;
-    String seatNumber; // BỔ SUNG: Số ghế (Có thể null nếu chưa chọn)
-    String baggageAllowance; // BỔ SUNG: Ghi chú hành lý cơ bản
+    String seatNumber;
+    String baggageAllowance;
 
-    // 5. Giá vé (Tùy chọn: Có hệ thống ẩn giá vé trên E-Ticket để tránh lộ khi mua hộ)
     BigDecimal totalAmount;
 }

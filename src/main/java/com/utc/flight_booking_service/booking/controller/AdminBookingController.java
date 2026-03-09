@@ -23,7 +23,7 @@ public class AdminBookingController {
     BookingService bookingService;
 
     @GetMapping
-    public ApiResponse<PageResponse<AdminBookingSummaryResponse>> searchBookings(AdminBookingSearchRequest request,
+    public ApiResponse<PageResponse<AdminBookingSummaryResponse>> searchBookings(@ModelAttribute AdminBookingSearchRequest request,
                                                                                  @RequestParam(defaultValue = "1") int page,
                                                                                  @RequestParam(defaultValue = "10") int size) {
         return ApiResponse.<PageResponse<AdminBookingSummaryResponse>>builder()
