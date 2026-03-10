@@ -55,8 +55,6 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, JpaSpec
             @Param("now") LocalDateTime now,
             Pageable pageable);
 
-    List<Booking> findByStatusAndCreatedAtBefore(BookingStatus bookingStatus, LocalDateTime fifteenMinsAgo);
-
 }
 
 

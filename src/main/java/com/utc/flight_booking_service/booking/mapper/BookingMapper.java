@@ -20,6 +20,7 @@ public interface BookingMapper {
     @Mapping(target = "totalFareAmount", ignore = true)
     @Mapping(target = "totalTaxAmount", ignore = true)
     @Mapping(target = "totalDiscountAmount", ignore = true)
+    @Mapping(target = "bookingAncillaries", ignore = true)
     Booking toBooking(BookingRequest request);
 
 

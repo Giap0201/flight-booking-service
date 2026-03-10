@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -24,4 +25,5 @@ public class TicketDetailResponse {
     LocalDateTime departureTime;
     LocalDateTime arrivalTime;
     FlightClassType classType;
+    List<AncillaryItemResponse> ancillaries;
 }
