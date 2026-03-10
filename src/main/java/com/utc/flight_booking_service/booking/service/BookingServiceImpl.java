@@ -233,6 +233,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public List<ETicketEmailModel> getTicketsByBookingId(String pnrCode) {
+        Booking booking = getBookingEntityByPnr(pnrCode);
+        return getTicketsByBookingId(booking.getId());
+    }
+
+    @Override
     public BookingDetailResponse getBookingClientByPnrAndContactEmail(BookingSearchRequest request) {
         Booking booking = bookingRepository.findByPnrCodeAndContactEmail(request.getPnrCode(), request.getContactEmail()).orElseThrow(() ->
                 new AppException(ErrorCode.BOOKING_NOT_FOUND));
