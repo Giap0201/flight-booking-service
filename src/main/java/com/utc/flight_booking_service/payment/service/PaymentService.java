@@ -3,6 +3,7 @@ package com.utc.flight_booking_service.payment.service;
 import com.utc.flight_booking_service.booking.entity.Booking;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.booking.service.BookingService;
+import com.utc.flight_booking_service.notification.service.EmailService;
 import com.utc.flight_booking_service.payment.config.VNPayConfig;
 import com.utc.flight_booking_service.payment.entity.Transaction;
 import com.utc.flight_booking_service.payment.enums.PaymentStatus;
@@ -33,6 +34,8 @@ public class PaymentService {
 
     private final BookingService bookingService;
     private final TransactionRepository transactionRepository;
+    private final EmailService emailService;
+
 
     @Value("${vnpay.tmn-code}")
     private String vnpTmnCode;
@@ -197,6 +200,8 @@ public class PaymentService {
             if ("00".equals(responseCode)) {
                 bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                 bookingService.issueTicketsForBooking(booking.getId());
+                emailService.sendBookingConfirmationEmail(bookingService.getBookingById(booking.getId()));
+                log.info("gui mail thanh cong");
             }
 
             response.put("RspCode", "00");
@@ -316,7 +321,9 @@ public class PaymentService {
 
                             bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                             bookingService.issueTicketsForBooking(booking.getId());
+                            emailService.sendBookingConfirmationEmail(bookingService.getBookingById(booking.getId()));
                             log.info("JOB ĐỐI SOÁT ĐÃ CỨU HỘ THÀNH CÔNG VÉ: {}", booking.getPnrCode());
+
                         }
                         return PaymentStatus.SUCCESS;
                     } else {

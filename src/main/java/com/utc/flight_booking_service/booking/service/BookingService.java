@@ -47,6 +47,7 @@ public interface BookingService {
     // Lay danh sach ve xuat pdf
     List<ETicketEmailModel> getTicketsByBookingId(UUID bookingId);
 
+    List<ETicketEmailModel> getTicketsByBookingId(String pnrCode);
     // Khach hang tra cuu booking thong qua ma pnr va email
     BookingDetailResponse getBookingClientByPnrAndContactEmail(BookingSearchRequest request);
 
