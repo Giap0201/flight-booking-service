@@ -40,6 +40,13 @@ public class UserController {
                 .build();
     }
 
+    @PutMapping("/my-infor")
+    ApiResponse<UserResponse> updateUser(@RequestBody @Valid UserUpdateRequest request) {
+
+        return ApiResponse.<UserResponse>builder().result(userService.updateInfor(request))
+                .build();
+    }
+
     @GetMapping("/{userId}")
     ApiResponse<UserResponse> getUser(@PathVariable("userId") UUID userId) {
         return ApiResponse.<UserResponse>builder()
@@ -48,11 +55,12 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    ApiResponse<UserResponse> updateUser(@RequestBody UserUpdateRequest request, @PathVariable UUID userId) {
+    ApiResponse<UserResponse> updateUser(@RequestBody @Valid AdminUserUpdateRequest request, @PathVariable UUID userId) {
 
         return ApiResponse.<UserResponse>builder().result(userService.updateUser(request, userId))
                 .build();
     }
+
 
     @PatchMapping("/{userId}/reset-password")
     ApiResponse<UserResponse> adminResetPassword(@RequestBody @Valid AdminPasswordResetRequest request, @PathVariable UUID userId) {

@@ -9,7 +9,6 @@ import com.utc.flight_booking_service.booking.response.admin.AdminBookingDetailR
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingCreatedResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingDetailResponse;
-import com.utc.flight_booking_service.booking.response.client.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
 import com.utc.flight_booking_service.booking.response.share.PageResponse;
 
