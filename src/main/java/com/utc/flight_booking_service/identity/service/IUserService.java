@@ -16,7 +16,7 @@ public interface IUserService {
 
     void deleteUser(UUID id);
 
-    UserResponse updateUser(UserUpdateRequest request, UUID id);
+    UserResponse updateUser(AdminUserUpdateRequest request, UUID id);
 
     UserResponse resetPasswordByAdmin(UUID userId, AdminPasswordResetRequest request);
 
@@ -25,4 +25,6 @@ public interface IUserService {
     UserResponse changePassword(ChangePasswordRequest request);
 
     void forgotPassword(ForgotPasswordRequest request);
+
+    UserResponse updateInfor(UserUpdateRequest request);
 }

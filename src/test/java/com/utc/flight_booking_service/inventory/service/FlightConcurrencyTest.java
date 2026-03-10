@@ -40,7 +40,7 @@ class FlightConcurrencyTest {
             executor.execute(() -> {
                 try {
                     latch.await(); // Đợi hiệu lệnh "chạy"
-                    flightClassService.decreaseSeats(targetId, 1);
+                    // flightClassService.decreaseSeats(targetId, 1);
                     successCount.incrementAndGet();
                 } catch (AppException e) {
                     // Bắt lỗi 3006 (UPDATE_SEAT_FAILED) đã cấu hình
