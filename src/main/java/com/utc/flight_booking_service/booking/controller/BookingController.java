@@ -8,12 +8,16 @@ import com.utc.flight_booking_service.booking.response.client.BookingDetailRespo
 import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
 import com.utc.flight_booking_service.booking.response.share.PageResponse;
 import com.utc.flight_booking_service.booking.service.BookingService;
+import com.utc.flight_booking_service.booking.service.PdfGenerationService;
 import com.utc.flight_booking_service.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +29,7 @@ import java.util.UUID;
 @RequestMapping("/bookings")
 public class BookingController {
     BookingService bookingService;
+    PdfGenerationService pdfGenerationService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -73,5 +78,23 @@ public class BookingController {
                 .message("Hủy vé thành công")
                 .result("CANCELLED")
                 .build();
+    }
+
+    @GetMapping("/{pnrCode}/download-pdf")
+    public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable String pnrCode) {
+
+        // 1. Dùng hàm CÓ SẴN của bạn để lấy ra cái List DTO y hệt như cục JSON bạn vừa gửi
+        List<ETicketEmailModel> tickets = bookingService.getTicketsByBookingId(pnrCode);
+
+        byte[] pdfBytes = pdfGenerationService.generateTicketPdf(tickets);
+
+        // 3. Gắn Header để báo cho trình duyệt biết đây là file PDF tải về
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "E-Ticket-" + pnrCode + ".pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
 }
