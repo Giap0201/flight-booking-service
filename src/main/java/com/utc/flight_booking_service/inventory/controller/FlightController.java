@@ -1,6 +1,8 @@
 package com.utc.flight_booking_service.inventory.controller;
 
 import com.utc.flight_booking_service.common.ApiResponse;
+import com.utc.flight_booking_service.common.AppConstants;
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.inventory.dto.request.FlightSearchRequestDTO;
 import com.utc.flight_booking_service.inventory.dto.response.CheapestDateResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.FlightDetailResponseDTO;
@@ -10,7 +12,6 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,16 +25,17 @@ public class FlightController {
     IFlightSearchService flightSearchService;
 
     @PostMapping("/search")
-    public ResponseEntity<ApiResponse<List<FlightSearchResponseDTO>>> searchFlights(@Valid @RequestBody FlightSearchRequestDTO request) {
-        List<FlightSearchResponseDTO> flights = flightSearchService.searchAvailableFlights(request);
-
-        ApiResponse<List<FlightSearchResponseDTO>> response = ApiResponse.<List<FlightSearchResponseDTO>>builder()
-                .code(1000)
+    public ApiResponse<PageResponse<FlightSearchResponseDTO>> searchFlights(
+            @Valid @RequestBody FlightSearchRequestDTO request,
+            @RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
+            @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size,
+            @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_FLIGHT_BY) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION) String sortDir
+    ) {
+        return ApiResponse.<PageResponse<FlightSearchResponseDTO>>builder()
                 .message("Tìm kiếm chuyến bay thành công")
-                .result(flights)
+                .result(flightSearchService.searchAvailableFlights(request, page, size, sortBy, sortDir))
                 .build();
-
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
