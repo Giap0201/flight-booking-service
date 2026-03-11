@@ -1,9 +1,12 @@
 package com.utc.flight_booking_service.inventory.controller;
 
 import com.utc.flight_booking_service.common.ApiResponse;
+import com.utc.flight_booking_service.common.AppConstants;
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.inventory.dto.request.FlightManualRequestDTO;
 import com.utc.flight_booking_service.inventory.dto.request.FlightUpdateRequestDTO;
 import com.utc.flight_booking_service.inventory.dto.request.PriceUpdateRequestDTO;
+import com.utc.flight_booking_service.inventory.dto.response.FlightSearchResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.FlightStatisticsResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.FlightUpdateResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.PriceUpdateResponseDTO;
@@ -71,6 +74,19 @@ public class AdminFlightController {
         return ApiResponse.<FlightStatisticsResponseDTO>builder()
                 .message("Lấy thống kê tồn kho thành công")
                 .result(flightService.getTodayStatistics())
+                .build();
+    }
+
+    @GetMapping
+    public ApiResponse<PageResponse<FlightSearchResponseDTO>> getAllFlights(
+            @RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
+            @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size,
+            @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_FLIGHT_BY) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION) String sortDir
+    ) {
+        return ApiResponse.<PageResponse<FlightSearchResponseDTO>>builder()
+                .message("Lấy danh sách chuyến bay thành công")
+                .result(flightService.getAllFlights(page, size, sortBy, sortDir))
                 .build();
     }
 }

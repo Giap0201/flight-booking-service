@@ -1,8 +1,10 @@
 package com.utc.flight_booking_service.inventory.service;
 
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.inventory.dto.request.FlightManualRequestDTO;
 import com.utc.flight_booking_service.inventory.dto.request.FlightUpdateRequestDTO;
 import com.utc.flight_booking_service.inventory.dto.request.PriceUpdateRequestDTO;
+import com.utc.flight_booking_service.inventory.dto.response.FlightSearchResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.FlightStatisticsResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.FlightUpdateResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.PriceUpdateResponseDTO;
@@ -17,4 +19,6 @@ public interface IFlightService {
     UUID createManualFlight(FlightManualRequestDTO request);
 
     FlightStatisticsResponseDTO getTodayStatistics();
+
+    PageResponse<FlightSearchResponseDTO> getAllFlights(int page, int size, String sortBy, String sortDir);
 }

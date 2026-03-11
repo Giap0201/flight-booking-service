@@ -1,5 +1,6 @@
 package com.utc.flight_booking_service.inventory.service;
 
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.inventory.dto.request.FlightSearchRequestDTO;
@@ -19,6 +20,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -37,8 +42,17 @@ public class FlightSearchService implements IFlightSearchService{
     FlightMapper flightMapper;
 
     @Cacheable(value = "flight_search",
-            key = "'SEARCH:' + #request.origin + ':' + #request.destination + ':' + #request.date")
-    public List<FlightSearchResponseDTO> searchAvailableFlights(FlightSearchRequestDTO request) {
+            key = "'SEARCH:' + #request.origin + ':' + #request.destination + ':' + #request.date + ':P' + #page")
+    @Override
+    public PageResponse<FlightSearchResponseDTO> searchAvailableFlights(
+            FlightSearchRequestDTO request, int page, int size, String sortBy, String sortDir) {
+
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // 2. Tạo Specification để lọc dữ liệu theo yêu cầu của khách
         Specification<Flight> spec = FlightSpecification.searchFlights(
                 request.getOrigin(),
                 request.getDestination(),
@@ -46,13 +60,16 @@ public class FlightSearchService implements IFlightSearchService{
                 request.getPassengers()
         );
 
-        List<Flight> flights = flightRepository.findAll(spec);
+        //Truy vấn phân trang
+        Page<Flight> flightPage = flightRepository.findAll(spec, pageable);
 
-        if (flights.isEmpty()) {
-            throw new AppException(ErrorCode.FLIGHT_NOT_FOUND);
-        }
-
-        return flightSearchMapper.toResponseDTOList(flights);
+        return PageResponse.<FlightSearchResponseDTO>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalPages(flightPage.getTotalPages())
+                .totalElements(flightPage.getTotalElements())
+                .data(flightSearchMapper.toResponseDTOList(flightPage.getContent()))
+            .build();
     }
 
     @Override
