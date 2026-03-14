@@ -35,10 +35,10 @@ public class FlightSyncService implements IFlightSyncService{
     @Value("${aviationstack.api.key}")
     private String apiKey;
 
-    public void fetchAndMapFlights() {
+    public String fetchAndMapFlights() {
         AviationResponseDTO response = aviationClient.getFlights(apiKey, 100);
 
-        if (response == null || response.getData() == null) return;
+        if (response == null || response.getData() == null) return "Không có dữ liệu từ API";
 
         int successCount = 0;
         int failCount = 0;
@@ -94,6 +94,8 @@ public class FlightSyncService implements IFlightSyncService{
         }
 
         System.out.println("Tổng kết Sync: Thành công " + successCount + ", Thất bại " + failCount);
+
+        return String.format("Đồng bộ hoàn tất: %d thành công, %d thất bại", successCount, failCount);
     }
 
     // ==========================================
@@ -115,13 +117,31 @@ public class FlightSyncService implements IFlightSyncService{
     }
 
     private Airline getOrCreateAirline(AviationFlightDTO.AirlineDTO dto) {
-        String code = (dto != null && dto.getIata() != null && !dto.getIata().trim().isEmpty()) ? dto.getIata() : "UNK";
-        return airlineRepository.findById(code).orElseGet(() -> {
+        String code = (dto != null && dto.getIata() != null && !dto.getIata().trim().isEmpty()) ?
+                dto.getIata() : "UNK";
+
+        Optional<Airline> existingAirlineOpt = airlineRepository.findById(code);
+
+        if (existingAirlineOpt.isPresent()) {
+            Airline airline = existingAirlineOpt.get();
+
+            if (airline.getLogoUrl() == null || airline.getLogoUrl().isEmpty()) {
+                String generatedLogoUrl = "https://img.logo.dev/iata/" + code + ".png?token=pk_fDBJo_JTRm2WiIRgffk4Yw";
+                airline.setLogoUrl(generatedLogoUrl);
+                return airlineRepository.save(airline);
+            }
+
+            return airline; // Trả về luôn nếu đã có logo
+        } else {
+            //TẠO MỚI NẾU CHƯA TỒN TẠI
             Airline newAirline = new Airline();
             newAirline.setCode(code);
             newAirline.setName(dto != null && dto.getName() != null ? dto.getName() : "Unknown Airline");
+
+            newAirline.setLogoUrl("https://img.logo.dev/iata/" + code + ".png?token=pk_fDBJo_JTRm2WiIRgffk4Yw");
+
             return airlineRepository.save(newAirline);
-        });
+        }
     }
 
     private Aircraft getOrCreateAircraft(AviationFlightDTO.AircraftDTO dto) {

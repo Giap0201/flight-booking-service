@@ -581,12 +581,12 @@ INSERT INTO airports (code, name, city_code, country_code, timezone, created_at,
     ON CONFLICT (code) DO NOTHING;
 
 -- Thêm các ông lớn Hàng không
-INSERT INTO airlines (code, name) VALUES
-('AA', 'American Airlines'),
-('DL', 'Delta Air Lines'),
-('UA', 'United Airlines'),
-('EK', 'Emirates'),
-('QR', 'Qatar Airways'),
-('LH', 'Lufthansa'),
-('SQ', 'Singapore Airlines')
+INSERT INTO airlines (code, created_at, updated_at, name, logo_url) VALUES
+('AA', NOW(), NOW(), 'American Airlines', 'https://img.logo.dev/name/AA?token=pk_fDBJo_JTRm2WiIRgffk4Yw'),
+('DL', NOW(), NOW(),'Delta Air Lines', 'https://img.logo.dev/name/DL?token=pk_fDBJo_JTRm2WiIRgffk4Yw'),
+('UA', NOW(), NOW(),'United Airlines', 'https://img.logo.dev/name/UA?token=pk_fDBJo_JTRm2WiIRgffk4Yw'),
+('EK', NOW(), NOW(),'Emirates', 'https://img.logo.dev/name/EK?token=pk_fDBJo_JTRm2WiIRgffk4Yw'),
+('QR', NOW(), NOW(),'Qatar Airways', 'https://img.logo.dev/name/QR?token=pk_fDBJo_JTRm2WiIRgffk4Yw'),
+('LH', NOW(), NOW(),'Lufthansa', 'https://img.logo.dev/name/LH?token=pk_fDBJo_JTRm2WiIRgffk4Yw'),
+('SQ', NOW(), NOW(),'Singapore Airlines', 'https://img.logo.dev/name/SQ?token=pk_fDBJo_JTRm2WiIRgffk4Yw')
 ON CONFLICT (code) DO NOTHING;
