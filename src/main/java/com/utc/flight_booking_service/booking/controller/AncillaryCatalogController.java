@@ -5,9 +5,9 @@ import com.utc.flight_booking_service.booking.request.AncillaryCatalogSearchRequ
 import com.utc.flight_booking_service.booking.request.AncillaryCatalogUpdateRequest;
 import com.utc.flight_booking_service.booking.response.admin.AdminAncillaryCatalogResponse;
 import com.utc.flight_booking_service.booking.response.client.AncillaryCatalogResponse;
-import com.utc.flight_booking_service.booking.response.share.PageResponse;
 import com.utc.flight_booking_service.booking.service.AncillaryCatalogService;
 import com.utc.flight_booking_service.common.ApiResponse;
+import com.utc.flight_booking_service.common.PageResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

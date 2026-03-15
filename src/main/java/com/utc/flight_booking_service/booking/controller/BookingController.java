@@ -6,10 +6,10 @@ import com.utc.flight_booking_service.booking.response.client.BookingSummaryResp
 import com.utc.flight_booking_service.booking.response.client.BookingCreatedResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingDetailResponse;
 import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
-import com.utc.flight_booking_service.booking.response.share.PageResponse;
 import com.utc.flight_booking_service.booking.service.BookingService;
 import com.utc.flight_booking_service.booking.service.PdfGenerationService;
 import com.utc.flight_booking_service.common.ApiResponse;
+import com.utc.flight_booking_service.common.PageResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +54,13 @@ public class BookingController {
                 .build();
     }
 
+    @GetMapping("/pnr/{pnrCode}/tickets")
+    ApiResponse<List<ETicketEmailModel>> getClientETicketsByPnrCode(@PathVariable String pnrCode) {
+        return ApiResponse.<List<ETicketEmailModel>>builder()
+                .result(bookingService.getTicketsByPnrCode(pnrCode))
+                .build();
+    }
+
     @GetMapping("/search")
     ApiResponse<BookingDetailResponse> getBookingByPnrAndContactEmail(@Valid BookingSearchRequest request) {
         return ApiResponse.<BookingDetailResponse>builder()
@@ -84,7 +91,7 @@ public class BookingController {
     public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable String pnrCode) {
 
         // 1. Dùng hàm CÓ SẴN của bạn để lấy ra cái List DTO y hệt như cục JSON bạn vừa gửi
-        List<ETicketEmailModel> tickets = bookingService.getTicketsByBookingId(pnrCode);
+        List<ETicketEmailModel> tickets = bookingService.getTicketsByPnrCode(pnrCode);
 
         byte[] pdfBytes = pdfGenerationService.generateTicketPdf(tickets);
 

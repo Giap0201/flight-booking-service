@@ -16,9 +16,9 @@ import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummary
 import com.utc.flight_booking_service.booking.response.client.*;
 import com.utc.flight_booking_service.booking.response.share.ContactResponse;
 import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
-import com.utc.flight_booking_service.booking.response.share.PageResponse;
 import com.utc.flight_booking_service.booking.specification.BookingSpecification;
 import com.utc.flight_booking_service.booking.utils.GeneratorCode;
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
@@ -26,6 +26,7 @@ import com.utc.flight_booking_service.identity.service.IUserService;
 import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
 import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import com.utc.flight_booking_service.payment.dto.response.AdminTransactionResponse;
+import com.utc.flight_booking_service.payment.dto.response.ClientTransactionResponse;
 import com.utc.flight_booking_service.payment.service.TransactionService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -133,7 +134,10 @@ public class BookingServiceImpl implements BookingService {
     public BookingDetailResponse getBookingById(UUID id) {
         Booking booking = bookingRepository.findById(id).orElseThrow(()
                 -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
-        return mapToBookingDetailResponse(booking);
+        BookingDetailResponse response = mapToBookingDetailResponse(booking);
+        List<ClientTransactionResponse> transactions = transactionService.getClientTransactionsByBookingId(booking.getId());
+        response.setTransactions(transactions);
+        return response;
     }
 
     @Override
@@ -233,16 +237,19 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<ETicketEmailModel> getTicketsByBookingId(String pnrCode) {
+    public List<ETicketEmailModel> getTicketsByPnrCode(String pnrCode) {
         Booking booking = getBookingEntityByPnr(pnrCode);
         return getTicketsByBookingId(booking.getId());
     }
 
     @Override
     public BookingDetailResponse getBookingClientByPnrAndContactEmail(BookingSearchRequest request) {
-        Booking booking = bookingRepository.findByPnrCodeAndContactEmail(request.getPnrCode(), request.getContactEmail()).orElseThrow(() ->
-                new AppException(ErrorCode.BOOKING_NOT_FOUND));
-        return mapToBookingDetailResponse(booking);
+        Booking booking = bookingRepository.findByPnrCodeAndContactEmail(request.getPnrCode(), request.getContactEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        BookingDetailResponse response = mapToBookingDetailResponse(booking);
+        List<ClientTransactionResponse> transactions = transactionService.getClientTransactionsByBookingId(booking.getId());
+        response.setTransactions(transactions);
+        return response;
     }
 
     @Override
@@ -272,7 +279,7 @@ public class BookingServiceImpl implements BookingService {
                 .pageSize(bookingPage.getSize())
                 .totalPages(bookingPage.getTotalPages())
                 .totalElements(bookingPage.getTotalElements())
-                .content(content)
+                .data(content)
                 .build();
     }
 
@@ -308,7 +315,7 @@ public class BookingServiceImpl implements BookingService {
                 .pageSize(bookingPage.getSize())
                 .totalPages(bookingPage.getTotalPages())
                 .totalElements(bookingPage.getTotalElements())
-                .content(content)
+                .data(content)
                 .build();
     }
 
