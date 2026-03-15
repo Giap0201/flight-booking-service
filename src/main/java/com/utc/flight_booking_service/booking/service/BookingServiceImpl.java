@@ -16,9 +16,9 @@ import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummary
 import com.utc.flight_booking_service.booking.response.client.*;
 import com.utc.flight_booking_service.booking.response.share.ContactResponse;
 import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
-import com.utc.flight_booking_service.booking.response.share.PageResponse;
 import com.utc.flight_booking_service.booking.specification.BookingSpecification;
 import com.utc.flight_booking_service.booking.utils.GeneratorCode;
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
@@ -233,7 +233,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<ETicketEmailModel> getTicketsByBookingId(String pnrCode) {
+    public List<ETicketEmailModel> getTicketsByPnrCode(String pnrCode) {
         Booking booking = getBookingEntityByPnr(pnrCode);
         return getTicketsByBookingId(booking.getId());
     }
@@ -272,7 +272,7 @@ public class BookingServiceImpl implements BookingService {
                 .pageSize(bookingPage.getSize())
                 .totalPages(bookingPage.getTotalPages())
                 .totalElements(bookingPage.getTotalElements())
-                .content(content)
+                .data(content)
                 .build();
     }
 
@@ -308,7 +308,7 @@ public class BookingServiceImpl implements BookingService {
                 .pageSize(bookingPage.getSize())
                 .totalPages(bookingPage.getTotalPages())
                 .totalElements(bookingPage.getTotalElements())
-                .content(content)
+                .data(content)
                 .build();
     }
 

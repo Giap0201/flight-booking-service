@@ -6,7 +6,7 @@ import com.utc.flight_booking_service.booking.response.client.BookingCreatedResp
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {BookingFlightMapper.class, PassengerMapper.class, TicketMapper.class})
+@Mapper(componentModel = "spring")
 public interface BookingMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "pnrCode", ignore = true)

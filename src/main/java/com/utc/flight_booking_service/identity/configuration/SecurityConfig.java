@@ -37,9 +37,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
         httpSecurity
+                // 1. THÊM DÒNG NÀY ĐỂ KÍCH HOẠT CORS TRONG SECURITY CHAIN
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 .authorizeHttpRequests(request -> request
-
-
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
 
@@ -52,7 +53,6 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
-
                         .anyRequest().authenticated()
                 )
 
@@ -63,25 +63,26 @@ public class SecurityConfig {
                                         .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
                 )
-
-
                 .csrf(AbstractHttpConfigurer::disable);
 
         return httpSecurity.build();
     }
 
+    // 2. CHỈNH SỬA LẠI BEAN NÀY
     @Bean
-    public CorsFilter corsFilter() {
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000")); // Port của React
-        corsConfiguration.addAllowedMethod("*");
-        corsConfiguration.addAllowedHeader("*");
+        // Đã đổi sang port 5173 của Vite
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173"));
+        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        corsConfiguration.setAllowedHeaders(List.of("*"));
+        corsConfiguration.setAllowCredentials(true); // Cần thiết nếu có dùng Cookie hoặc header Authorization
 
         UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
 
-        return new CorsFilter(urlBasedCorsConfigurationSource);
+        return urlBasedCorsConfigurationSource;
     }
 
     @Bean

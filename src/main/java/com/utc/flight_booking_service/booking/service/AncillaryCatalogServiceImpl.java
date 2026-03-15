@@ -9,8 +9,8 @@ import com.utc.flight_booking_service.booking.request.AncillaryCatalogSearchRequ
 import com.utc.flight_booking_service.booking.request.AncillaryCatalogUpdateRequest;
 import com.utc.flight_booking_service.booking.response.admin.AdminAncillaryCatalogResponse;
 import com.utc.flight_booking_service.booking.response.client.AncillaryCatalogResponse;
-import com.utc.flight_booking_service.booking.response.share.PageResponse;
 import com.utc.flight_booking_service.booking.specification.AncillaryCatalogSpecification;
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import jakarta.transaction.Transactional;
@@ -68,7 +68,7 @@ public class AncillaryCatalogServiceImpl implements AncillaryCatalogService {
                 .totalElements(ancillaryCatalogPage.getTotalElements())
                 .totalPages(ancillaryCatalogPage.getTotalPages())
                 .pageSize(ancillaryCatalogPage.getSize())
-                .content(content)
+                .data(content)
                 .build();
     }
 
