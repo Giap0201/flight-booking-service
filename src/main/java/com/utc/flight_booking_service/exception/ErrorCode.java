@@ -9,12 +9,101 @@ import org.springframework.http.HttpStatusCode;
 @AllArgsConstructor
 public enum ErrorCode {
     //SYSTEM - COMMON (1xxx)
-    UNCATEGORIZED_EXCEPTION(1001, "Lỗi hệ thống", HttpStatus.INTERNAL_SERVER_ERROR),
-    INVALID_KEY(1002, "Mã lỗi không hợp lệ", HttpStatus.INTERNAL_SERVER_ERROR),
 
+
+
+    UNCATEGORIZED_EXCEPTION(1001, "Lỗi hệ thống không xác định", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    INVALID_KEY(1002, "Mã lỗi không hợp lệ", HttpStatus.INTERNAL_SERVER_ERROR),
+    EMAIL_EXISTED(1003, "Email đã tồn tại", HttpStatus.BAD_REQUEST),
+    PHONE_EXISTED(1004, "Số điện thoại đã tồn tại", HttpStatus.BAD_REQUEST),
+    USER_NOT_FOUND(1005, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND),
+    USER_NOT_EXISTED(1014, "Người dùng không tồn tại", HttpStatus.NOT_FOUND),
+    ROLE_NOT_FOUND(1100, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
+    ROLE_EXISTED(1101, "Vai trò đã tồn tại", HttpStatus.BAD_REQUEST),
+
+    EMAIL_REQUIRED(1006, "Vui lòng nhập Email", HttpStatus.BAD_REQUEST),
+    EMAIL_INVALID(1007, "Định dạng Email không hợp lệ", HttpStatus.BAD_REQUEST),
+
+    PASSWORD_REQUIRED(1008, "Vui lòng nhập mật khẩu", HttpStatus.BAD_REQUEST),
+    PASSWORD_INVALID(1009, "Mật khẩu phải có độ dài từ {min} đến {max} ký tự", HttpStatus.BAD_REQUEST),
+
+    FULLNAME_REQUIRED(1010, "Vui lòng nhập họ tên", HttpStatus.BAD_REQUEST),
+    FULLNAME_INVALID(1011, "Họ tên phải có độ dài từ {min} đến {max} ký tự", HttpStatus.BAD_REQUEST),
+    PHONE_REQUIRED(1012, "Vui lòng nhập số điện thoại", HttpStatus.BAD_REQUEST),
+    UNAUTHENTICATED(1015, "Chưa xác thực danh tính", HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED(1016, "Bạn không có quyền truy cập", HttpStatus.FORBIDDEN),
+    PHONE_INVALID(1013, "Số điện thoại phải có 10 chữ số và bắt đầu bằng số 0", HttpStatus.BAD_REQUEST),
+    PASSWORD_INCORRECT(1017, "Mật khẩu cũ không chính xác", HttpStatus.BAD_REQUEST),
+    PASSWORD_CONFIRM_NOT_MATCHED(1018, "Mật khẩu xác nhận không khớp", HttpStatus.BAD_REQUEST),
+    PASSWORD_DUPLICATED(1019, "Mật khẩu không được trùng lặp với mật khẩu cũ", HttpStatus.BAD_REQUEST),
+
+
+    // BOOKING
+    FLIGHT_ID_REQUIRED(2001, "Mã máy bay không được bỏ trống", HttpStatus.BAD_REQUEST),
+    FLIGHT_CLASS_ID_REQUIRED(2002, "Mã lịch bay không được bỏ trống", HttpStatus.BAD_REQUEST),
+    FIRST_NAME_REQUIRED(2003, "Họ không được bỏ trống", HttpStatus.BAD_REQUEST),
+    FIRST_NAME_TOO_LONG(2004, "Họ có độ dài không hợp lệ", HttpStatus.BAD_REQUEST),
+    LAST_NAME_REQUIRED(2005, "Tên không được bỏ trống", HttpStatus.BAD_REQUEST),
+    LAST_NAME_TOO_LONG(2006, "Tên có độ dài không hợp lệ", HttpStatus.BAD_REQUEST),
+    DOB_REQUIRED(2007, "Ngày sinh không được bỏ trống", HttpStatus.BAD_REQUEST),
+    DOB_MUST_BE_IN_PAST(2008, "Ngày sinh không hợp lệ", HttpStatus.BAD_REQUEST),
+    GENDER_REQUIRED(2009, "Giới tính không được bỏ trống", HttpStatus.BAD_REQUEST),
+    PASSENGER_TYPE_REQUIRED(2010, "Loại hành khách không được bỏ trống", HttpStatus.BAD_REQUEST),
+    CANNOT_CREATE_PNR_CODE(2011, "Không thể tạo ra mã PNR_CODE", HttpStatus.INTERNAL_SERVER_ERROR),
+    BOOKING_NOT_PAID_YET(2012, "Đơn đặt chưa được thanh toán hoặc đã bị huỷ", HttpStatus.BAD_REQUEST),
+    BOOKING_CANCELLED(2013, "Đơn đặt đã bị huỷ", HttpStatus.BAD_REQUEST),
+//    USER_REQUIRED (2014, "Không thể xác định người dùng", HttpStatus.INTERNAL_SERVER_ERROR),
+    PNR_REQUIRED(2015, "Mã pnr không được bỏ trống", HttpStatus.BAD_REQUEST),
+    CONTACT_EMAIL_REQUIRED(2016, "Email liên hệ không được trống", HttpStatus.BAD_REQUEST),
+    CONTACT_NAME_REQUIRED(2017, "Tên liên hệ không được bỏ trống", HttpStatus.BAD_REQUEST),
+    EMAIL_INVALID_FORMAT(2018, "Email không đúng định dạng", HttpStatus.BAD_REQUEST),
+    CONTACT_PHONE_REQUIRED(2019, "Số điện thoại liên hệ không được bỏ trống", HttpStatus.BAD_REQUEST),
+    PHONE_INVALID_FORMAT(2020, "Số điện thoại liên hệ không đúng định dạng", HttpStatus.BAD_REQUEST),
+    BOOKING_NOT_FOUND(2021, "Không tìm thấy Booking", HttpStatus.NOT_FOUND),
+    FLIGHTS_REQUIRED(2022,"Danh sách chuyến đi không được rỗng", HttpStatus.BAD_REQUEST ),
+    PASSENGERS_REQUIRED(2023, "Danh sách hành khách không được rỗng", HttpStatus.BAD_REQUEST ),
+    CANNOT_CANCEL_BOOKING(2024, "Chỉ có thể hủy đơn đặt chỗ khi chưa thanh toán", HttpStatus.BAD_REQUEST),
+    FORBIDDEN(2025, "Bạn không có quyền truy cập vào đơn đặt chỗ này", HttpStatus.FORBIDDEN),
+
+
+    // TRANSACTION
+    TRANSACTION_NOT_FOUND(2050, "Không tìm thấy Transaction", HttpStatus.NOT_FOUND),
+
+
+    //BOOKING_ANCILLARY_CATALOG
+    ANCILLARY_CATALOG_CODE_REQUIRED(2100, "Mã dịch vụ không được để trống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_TYPE_REQUIRED(2101, "Loại dịch vụ không được để trống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_NAME_REQUIRED(2102, "Tên dịch vụ không được để trống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_PRICE_REQUIRED(2103, "Giá dịch vụ không được để trống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_PRICE_INVALID(2104, "Giá dịch vụ phải lớn hơn hoặc bằng 0", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_NOT_FOUND(2105, "Không tìm thấy dịch vụ bổ trợ", HttpStatus.NOT_FOUND),
+    ANCILLARY_CATALOG_EXISTED(2106, "Mã dịch vụ này đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_CODE_EXISTED(2106, "Mã dịch vụ này đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+    ANCILLARY_CATALOG_NAME_EXISTED(2107, "Tên dịch vụ này đã tồn tại trong hệ thống", HttpStatus.BAD_REQUEST),
+
+    // BOOKING_ANCILLARY
+    ANCILLARY_CATALOG_ID_REQUIRED(2108, "ID dịch vụ bổ trợ không được để trống", HttpStatus.BAD_REQUEST),
+    PASSENGER_INDEX_REQUIRED(2109, "Chỉ mục hành khách (passengerIndex) không được để trống", HttpStatus.BAD_REQUEST),
+    SEGMENT_NO_REQUIRED(2110, "Mã chặng bay (segmentNo) không được để trống", HttpStatus.BAD_REQUEST),
+    PASSENGER_INDEX_OUT_OF_BOUNDS(2111, "Chỉ mục hành khách không hợp lệ so với số lượng khách thực tế", HttpStatus.BAD_REQUEST),
+    SEGMENT_NO_INVALID(2112, "Mã chặng bay (segmentNo) không khớp với hành trình đã chọn", HttpStatus.BAD_REQUEST),
+
+
+    //INVENTORY
+    FLIGHT_NOT_FOUND(3000, "Không tìm thấy chuyến bay nào phù hợp", HttpStatus.NOT_FOUND),
+    ORIGIN_REQUIRED(3001, "Điểm đi không được để trống", HttpStatus.BAD_REQUEST),
+    DESTINATION_REQUIRED(3002, "Điểm đến không được để trống", HttpStatus.BAD_REQUEST),
+    DATE_REQUIRED(3003, "Ngày bay không được để trống", HttpStatus.BAD_REQUEST),
+    DATE_INVALID(3004, "Ngày bay phải từ hôm nay trở đi", HttpStatus.BAD_REQUEST),
+    PASSENGERS_INVALID(3005, "Số lượng hành khách ít nhất là 1", HttpStatus.BAD_REQUEST),
+    UPDATE_SEAT_FAILED(3006, "Ghế đang được người khác đặt, vui lòng thử lại", HttpStatus.CONFLICT),
+    NOT_ENOUGH_SEATS(3007, "Không đủ số lượng ghế trống", HttpStatus.BAD_REQUEST),
+    MIN_SEAT_RESERVATION(3009, "Số lượng ghế đặt phải ít nhất là 1", HttpStatus.BAD_REQUEST),
+    INVALID_PRICE(3010, "Giá vé không được nhỏ hơn 0", HttpStatus.BAD_REQUEST)
 
     ;
-    private int code;
-    private String message;
-    private HttpStatusCode httpStatusCode;
+    private final int code;
+    private final String message;
+    private final HttpStatusCode httpStatusCode;
 }
