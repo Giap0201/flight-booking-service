@@ -3,6 +3,7 @@ package com.utc.flight_booking_service.payment.service;
 import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.payment.dto.request.TransactionSearchRequest;
 import com.utc.flight_booking_service.payment.dto.response.AdminTransactionResponse;
+import com.utc.flight_booking_service.payment.dto.response.ClientTransactionResponse;
 import com.utc.flight_booking_service.payment.entity.Transaction;
 import com.utc.flight_booking_service.payment.mapper.TransactionMapper;
 import com.utc.flight_booking_service.payment.repository.TransactionRepository;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,6 +53,15 @@ public class TransactionServiceImpl implements TransactionService {
                 .pageSize(transactions.getSize())
                 .currentPage(page)
                 .build();
+    }
+
+    @Override
+    public List<ClientTransactionResponse> getClientTransactionsByBookingId(UUID bookingId) {
+        List<Transaction> transactions = transactionRepository.findByBookingIdOrderByCreatedAtDesc(bookingId);
+        if (transactions == null || transactions.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return transactionMapper.toClientTransactionResponseList(transactions);
     }
 
 }

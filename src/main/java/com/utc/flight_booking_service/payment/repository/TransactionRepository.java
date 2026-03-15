@@ -16,4 +16,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     boolean existsByBankRefNo(String bankRefNo);
 
     boolean existsByTransactionNo(String vnpBankTranNo);
+
+    List<Transaction> findByBookingIdOrderByCreatedAtDesc(UUID bookingId);
 }
