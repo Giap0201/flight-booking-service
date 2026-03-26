@@ -36,9 +36,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
-        httpSecurity.cors(org.springframework.security.config.Customizer.withDefaults());
-
         httpSecurity
+                // 1. THÊM DÒNG NÀY ĐỂ KÍCH HOẠT CORS TRONG SECURITY CHAIN
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 .authorizeHttpRequests(request -> request
 
 
@@ -76,7 +77,7 @@ public class SecurityConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173")); // Port của React
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000")); // Port của React
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.addAllowedHeader("*");
 

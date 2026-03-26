@@ -1,9 +1,8 @@
 package com.utc.flight_booking_service.inventory.service;
 
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.inventory.dto.response.AirportResponseDTO;
 
-import java.util.List;
-
 public interface IAirportService {
-    List<AirportResponseDTO> getAllAirports(String keyword);
+    PageResponse<AirportResponseDTO> getAllAirports(String keyword, int page, int size, String sortBy, String sortDir);
 }

@@ -2,6 +2,7 @@ package com.utc.flight_booking_service.booking.response.client;
 
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.booking.response.share.ContactResponse;
+import com.utc.flight_booking_service.payment.dto.response.ClientTransactionResponse;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -22,4 +23,5 @@ public class BookingDetailResponse {
 
     ContactResponse contact;
     List<PassengerTicketResponse> passengers;
+    List<ClientTransactionResponse> transactions;
 }

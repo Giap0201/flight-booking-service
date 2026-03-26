@@ -1,16 +1,19 @@
 package com.utc.flight_booking_service.inventory.service;
 
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.inventory.dto.request.FlightManualRequestDTO;
 import com.utc.flight_booking_service.inventory.dto.request.FlightUpdateRequestDTO;
 import com.utc.flight_booking_service.inventory.dto.request.PriceUpdateRequestDTO;
+import com.utc.flight_booking_service.inventory.dto.response.FlightSearchResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.FlightStatisticsResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.FlightUpdateResponseDTO;
 import com.utc.flight_booking_service.inventory.dto.response.PriceUpdateResponseDTO;
 import com.utc.flight_booking_service.inventory.entity.*;
 import com.utc.flight_booking_service.inventory.mapper.FlightClassMapper;
 import com.utc.flight_booking_service.inventory.mapper.FlightMapper;
+import com.utc.flight_booking_service.inventory.mapper.FlightSearchMapper;
 import com.utc.flight_booking_service.inventory.mapper.FlightStatsMapper;
 import com.utc.flight_booking_service.inventory.repository.*;
 import com.utc.flight_booking_service.inventory.repository.projection.IFlightStatsProjection;
@@ -18,6 +21,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +45,7 @@ public class FlightService implements IFlightService{
     FlightMapper flightMapper;
     FlightClassMapper flightClassMapper;
     FlightStatsMapper flightStatsMapper;
+    FlightSearchMapper flightSearchMapper;
     IFlightEnrichmentService flightEnrichmentService;
 
     @Transactional
@@ -112,4 +120,23 @@ public class FlightService implements IFlightService{
         return flightStatsMapper.toStatisticsDTO(stats);
     }
 
+    @Override
+    public PageResponse<FlightSearchResponseDTO> getAllFlights(int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Flight> flightPage = flightRepository.findAll(pageable);
+
+        return PageResponse.<FlightSearchResponseDTO>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalPages(flightPage.getTotalPages())
+                .totalElements(flightPage.getTotalElements())
+                .data(flightPage.getContent().stream()
+                        .map(flightSearchMapper::toResponseDTO) // [cite: 145]
+                        .toList())
+                .build();
+    }
 }
