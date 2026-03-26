@@ -236,14 +236,14 @@ public class PaymentService {
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
                 // Thành công -> Đá về ReactJS kèm query string (để FE tự vẽ bill nếu cần)
-                return "http://localhost:3000/payment-success?" + request.getQueryString();
+                return "http://localhost:5173/payment-success?" + request.getQueryString();
             } else {
                 // Thất bại
-                return "http://localhost:3000/payment-failed?pnr=" + pnrCode;
+                return "http://localhost:5173/payment-failed?pnr=" + pnrCode;
             }
         } else {
             // Sai chữ ký (Có nguy cơ bị hacker chọc phá)
-            return "http://localhost:3000/payment-error?message=invalid-signature";
+            return "http://localhost:5173/payment-error?message=invalid-signature";
         }
     }
 
