@@ -24,10 +24,9 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
-            "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", "/bookings/**", "/users/forgot-password"};
+            "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", "/bookings/**", "/users/forgot-password", "/flights/search"};
     private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
-            "/payments/**", "/bookings/**"
-
+            "/payments/**", "/bookings/**", "/flights/**", "/flight_classes/**", "/airports/**", "/v1/airports"
     };
 
     @Autowired
@@ -36,9 +35,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
+        httpSecurity.cors(org.springframework.security.config.Customizer.withDefaults());
+
         httpSecurity
                 // 1. THÊM DÒNG NÀY ĐỂ KÍCH HOẠT CORS TRONG SECURITY CHAIN
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .authorizeHttpRequests(request -> request
 
@@ -77,7 +78,7 @@ public class SecurityConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000")); // Port của React
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173")); // Port của React
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.addAllowedHeader("*");
 
