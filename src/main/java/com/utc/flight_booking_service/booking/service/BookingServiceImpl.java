@@ -64,7 +64,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingCreatedResponse createBooking(BookingRequest request) {
-        UserResponse user = userService.getMyInfo();
+//        UserResponse user = userService.getMyInfo();
+
         int totalPassengers = request.getPassengers().size();
 
         // 1. Kiem tra va giu ghe (be1)
@@ -77,7 +78,8 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(BookingStatus.PENDING);
         booking.setPnrCode(pnrCode);
         booking.setExpireAt(LocalDateTime.now().plusMinutes(10));
-        booking.setUserId(user.getId());
+//        booking.setUserId(user.getId());
+        booking.setUserId(null);
         request.getPassengers().forEach(passenger -> {
             Passenger p = passengerMapper.toPassenger(passenger);
             booking.addPassenger(p);

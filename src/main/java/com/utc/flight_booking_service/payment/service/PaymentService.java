@@ -52,7 +52,7 @@ public class PaymentService {
     @Value("${vnpay.api-url}")
     private String vnpApiUrl;
 
-    public String createPaymentUrl(UUID bookingId, HttpServletRequest request) {
+    public String createPaymentUrl(UUID bookingId, String platform, HttpServletRequest request) {
         Booking booking = bookingService.getBookingEntityById(bookingId);
 
         long amount = booking.getTotalAmount().longValue() * 100L;
@@ -68,9 +68,16 @@ public class PaymentService {
         vnp_Params.put("vnp_OrderInfo", "Thanh_toan_ve_PNR_" + booking.getPnrCode());
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", vnpReturnUrl);
-        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
-//        vnp_Params.put("vnp_IpAddr", "127.0.0.1");
+
+        String finalReturnUrl = vnpReturnUrl;
+        if (platform != null && !platform.trim().isEmpty()) {
+            // Kiểm tra xem url gốc đã có dấu ? chưa để nối cho đúng
+            finalReturnUrl = finalReturnUrl + (finalReturnUrl.contains("?") ? "&" : "?") + "platform=" + platform;
+        }
+        vnp_Params.put("vnp_ReturnUrl", finalReturnUrl);
+
+//         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+        vnp_Params.put("vnp_IpAddr", "127.0.0.1");
 
         // Xu li dinh dang ngay thang
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
@@ -216,34 +223,47 @@ public class PaymentService {
         }
     }
 
-    // FIXED: Hàm Return chỉ còn nhiệm vụ đá trang (Redirect), tuyệt đối không chọc DB
     public String processReturn(HttpServletRequest request) {
         Map<String, String> fields = new HashMap<>();
         for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements(); ) {
             String fieldName = params.nextElement();
             String fieldValue = request.getParameter(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+
+            // ⚡ SỬA Ở ĐÂY: Chỉ lấy những tham số của VNPAY (Bắt đầu bằng vnp_) để kiểm tra chữ ký ⚡
+            if ((fieldValue != null) && (fieldValue.length() > 0) && fieldName.startsWith("vnp_")) {
                 fields.put(fieldName, fieldValue);
             }
         }
-
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
         fields.remove("vnp_SecureHashType");
         fields.remove("vnp_SecureHash");
         String signValue = VNPayConfig.hashAllFields(fields, secretKey);
         String pnrCode = request.getParameter("vnp_TxnRef");
 
+        // ⚡ LẤY THÔNG TIN TỪ REQUEST ⚡
+        String platform = request.getParameter("platform");
+        String responseCode = request.getParameter("vnp_ResponseCode");
+
         if (signValue.equals(vnp_SecureHash)) {
-            if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
-                // Thành công -> Đá về ReactJS kèm query string (để FE tự vẽ bill nếu cần)
-                return "http://localhost:3000/payment-success?" + request.getQueryString();
+            if ("00".equals(responseCode)) {
+                // THÀNH CÔNG
+                if ("android".equals(platform)) {
+                    return "flightbooking://payment-result?code=00"; // Đá về App Android
+                }
+                return "http://localhost:3000/payment-success?" + request.getQueryString(); // Đá về ReactJS
             } else {
-                // Thất bại
-                return "http://localhost:3000/payment-failed?pnr=" + pnrCode;
+                // THẤT BẠI
+                if ("android".equals(platform)) {
+                    return "flightbooking://payment-result?code=" + responseCode; // Đá về App Android
+                }
+                return "http://localhost:3000/payment-failed?pnr=" + pnrCode; // Đá về ReactJS
             }
         } else {
-            // Sai chữ ký (Có nguy cơ bị hacker chọc phá)
-            return "http://localhost:3000/payment-error?message=invalid-signature";
+            // SAI CHỮ KÝ (LỖI)
+            if ("android".equals(platform)) {
+                return "flightbooking://payment-result?code=99"; // Đá về App Android với mã lỗi tự chế 99
+            }
+            return "http://localhost:3000/payment-error?message=invalid-signature"; // Đá về ReactJS
         }
     }
 
@@ -351,7 +371,6 @@ public class PaymentService {
         } catch (Exception e) {
             log.error("Lỗi khi gọi API Đối soát VNPAY cho PNR: {}", booking.getPnrCode(), e);
         }
-
         // Nếu gọi API có lỗi mạng, trả về PENDING để lần quét Job sau (1 phút nữa) gọi lại
         return PaymentStatus.PENDING;
     }

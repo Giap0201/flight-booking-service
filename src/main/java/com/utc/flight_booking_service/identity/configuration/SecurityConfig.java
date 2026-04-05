@@ -24,9 +24,9 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
-            "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", "/bookings/**", "/users/forgot-password"};
+            "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", "/bookings/**", "/users/forgot-password", "/flights/**"};
     private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
-            "/payments/**", "/bookings/**"
+            "/payments/**", "/bookings/**", "/flights/**","/ancillary-catalogs/**"
 
     };
 
@@ -43,7 +43,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
-
+                        .requestMatchers(HttpMethod.POST, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST, "bookings/**").permitAll()
                         // Swagger
                         .requestMatchers(
                                 "/swagger-ui/**",
