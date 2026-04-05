@@ -250,20 +250,20 @@ public class PaymentService {
                 if ("android".equals(platform)) {
                     return "flightbooking://payment-result?code=00"; // Đá về App Android
                 }
-                return "http://localhost:3000/payment-success?" + request.getQueryString(); // Đá về ReactJS
+                return "http://localhost:5173/payment-success?" + request.getQueryString(); // Đá về ReactJS
             } else {
                 // THẤT BẠI
                 if ("android".equals(platform)) {
                     return "flightbooking://payment-result?code=" + responseCode; // Đá về App Android
                 }
-                return "http://localhost:3000/payment-failed?pnr=" + pnrCode; // Đá về ReactJS
+                return "http://localhost:5173/payment-failed?pnr=" + pnrCode; // Đá về ReactJS
             }
         } else {
             // SAI CHỮ KÝ (LỖI)
             if ("android".equals(platform)) {
                 return "flightbooking://payment-result?code=99"; // Đá về App Android với mã lỗi tự chế 99
             }
-            return "http://localhost:3000/payment-error?message=invalid-signature"; // Đá về ReactJS
+            return "http://localhost:5173/payment-error?message=invalid-signature"; // Đá về ReactJS
         }
     }
 
