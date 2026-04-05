@@ -16,6 +16,7 @@ import java.util.UUID;
 public class FlightSearchResponseDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    UUID id;
     String flightNumber;
     String airlineName;
     String origin;

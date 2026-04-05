@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FlightClassDTO implements Serializable {
     private static final long serialVersionUID = 1L;
+    UUID id;
     String className;
     BigDecimal basePrice;
     Integer availableSeats;
