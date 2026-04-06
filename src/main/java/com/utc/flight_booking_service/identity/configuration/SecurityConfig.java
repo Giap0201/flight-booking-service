@@ -26,7 +26,7 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
             "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", "/bookings/**", "/users/forgot-password", "/flights/**"};
     private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
-            "/payments/**", "/bookings/**", "/flights/**","/ancillary-catalogs/**"
+            "/payments/**", "/flights/**","/ancillary-catalogs/**", "/v1/airports/**"
 
     };
 
@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.POST, "bookings/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "flights/**").permitAll()
                         // Swagger
                         .requestMatchers(
                                 "/swagger-ui/**",

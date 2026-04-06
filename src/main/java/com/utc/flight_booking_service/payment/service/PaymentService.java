@@ -36,7 +36,6 @@ public class PaymentService {
     private final TransactionRepository transactionRepository;
     private final EmailService emailService;
 
-
     @Value("${vnpay.tmn-code}")
     private String vnpTmnCode;
 
@@ -65,35 +64,32 @@ public class PaymentService {
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
         vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_TxnRef", booking.getPnrCode());
+        // Viết liền không dấu cách để tránh lỗi Decode tự động của Spring Boot
         vnp_Params.put("vnp_OrderInfo", "Thanh_toan_ve_PNR_" + booking.getPnrCode());
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_Locale", "vn");
 
+        // ⚡ Nối thêm tham số platform vào ReturnUrl để nhận biết luồng Android hay Web
         String finalReturnUrl = vnpReturnUrl;
         if (platform != null && !platform.trim().isEmpty()) {
-            // Kiểm tra xem url gốc đã có dấu ? chưa để nối cho đúng
             finalReturnUrl = finalReturnUrl + (finalReturnUrl.contains("?") ? "&" : "?") + "platform=" + platform;
         }
         vnp_Params.put("vnp_ReturnUrl", finalReturnUrl);
 
-//         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
         vnp_Params.put("vnp_IpAddr", "127.0.0.1");
 
-        // Xu li dinh dang ngay thang
+        // Xử lý định dạng ngày tháng
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-
-        // ep mui gio cho formatter
         formatter.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
 
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        // ngay het han (15p)
+        // Ngày hết hạn (15p)
         cld.add(Calendar.MINUTE, 15);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
-
 
         // Build chuỗi dữ liệu
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
@@ -126,6 +122,7 @@ public class PaymentService {
         String vnp_SecureHash = VNPayConfig.hmacSHA512(secretKey, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         bookingService.updateBookingStatus(booking.getId(), BookingStatus.AWAITING_PAYMENT);
+
         return vnpPayUrl + "?" + queryUrl;
     }
 
@@ -180,9 +177,18 @@ public class PaymentService {
             }
 
             String bankRefNo = request.getParameter("vnp_BankTranNo");
-            String transactionNo = request.getParameter("vnp_TransactionNo"); // FIXED: Tách riêng mã giao dịch VNPAY
+            String transactionNo = request.getParameter("vnp_TransactionNo");
 
-            if (bankRefNo != null && transactionRepository.existsByBankRefNo(bankRefNo)) {
+            // ⚡ FIX: Chống lỗi Duplicate Key khi khách hàng Hủy thanh toán nhiều lần
+            if (bankRefNo == null || bankRefNo.trim().isEmpty()) {
+                bankRefNo = "CANCEL_" + UUID.randomUUID().toString().substring(0, 8);
+            }
+            if (transactionNo == null || transactionNo.trim().isEmpty() || "0".equals(transactionNo)) {
+                transactionNo = "CANCEL_" + UUID.randomUUID().toString().substring(0, 8);
+            }
+
+            // Kiểm tra trùng lặp (chỉ check nếu đó là giao dịch thật từ ngân hàng)
+            if (!bankRefNo.startsWith("CANCEL_") && transactionRepository.existsByBankRefNo(bankRefNo)) {
                 response.put("RspCode", "02");
                 response.put("Message", "Transaction already processed");
                 return response;
@@ -208,7 +214,9 @@ public class PaymentService {
                 bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                 bookingService.issueTicketsForBooking(booking.getId());
                 emailService.sendBookingConfirmationEmail(bookingService.getBookingById(booking.getId()));
-                log.info("gui mail thanh cong");
+                log.info("Gửi mail thành công cho PNR: {}", booking.getPnrCode());
+            } else {
+                log.warn("Thanh toán thất bại/Khách hủy giao dịch cho PNR: {}", booking.getPnrCode());
             }
 
             response.put("RspCode", "00");
@@ -216,7 +224,7 @@ public class PaymentService {
             return response;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Lỗi IPN: ", e);
             response.put("RspCode", "99");
             response.put("Message", "Unknown error");
             return response;
@@ -229,41 +237,38 @@ public class PaymentService {
             String fieldName = params.nextElement();
             String fieldValue = request.getParameter(fieldName);
 
-            // ⚡ SỬA Ở ĐÂY: Chỉ lấy những tham số của VNPAY (Bắt đầu bằng vnp_) để kiểm tra chữ ký ⚡
+            // ⚡ FIX CHỮ KÝ: Bắt buộc lọc các tham số của VNPAY, bỏ qua biến 'platform'
             if ((fieldValue != null) && (fieldValue.length() > 0) && fieldName.startsWith("vnp_")) {
                 fields.put(fieldName, fieldValue);
             }
         }
+
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
         fields.remove("vnp_SecureHashType");
         fields.remove("vnp_SecureHash");
         String signValue = VNPayConfig.hashAllFields(fields, secretKey);
-        String pnrCode = request.getParameter("vnp_TxnRef");
 
-        // ⚡ LẤY THÔNG TIN TỪ REQUEST ⚡
-        String platform = request.getParameter("platform");
+        String pnrCode = request.getParameter("vnp_TxnRef");
+        String platform = request.getParameter("platform"); // Lấy biến platform ra để check
         String responseCode = request.getParameter("vnp_ResponseCode");
+
+        String reactBaseUrl = "http://localhost:5173"; // Trả về đúng Port React của bạn
 
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(responseCode)) {
                 // THÀNH CÔNG
-                if ("android".equals(platform)) {
-                    return "flightbooking://payment-result?code=00"; // Đá về App Android
-                }
-                return "http://localhost:3000/payment-success?" + request.getQueryString(); // Đá về ReactJS
+                if ("android".equals(platform)) return "flightbooking://payment-result?code=00";
+                return reactBaseUrl + "/payment-success?" + request.getQueryString();
             } else {
                 // THẤT BẠI
-                if ("android".equals(platform)) {
-                    return "flightbooking://payment-result?code=" + responseCode; // Đá về App Android
-                }
-                return "http://localhost:3000/payment-failed?pnr=" + pnrCode; // Đá về ReactJS
+                if ("android".equals(platform)) return "flightbooking://payment-result?code=" + responseCode;
+                return reactBaseUrl + "/payment-failed?pnr=" + pnrCode;
             }
         } else {
-            // SAI CHỮ KÝ (LỖI)
-            if ("android".equals(platform)) {
-                return "flightbooking://payment-result?code=99"; // Đá về App Android với mã lỗi tự chế 99
-            }
-            return "http://localhost:3000/payment-error?message=invalid-signature"; // Đá về ReactJS
+            // SAI CHỮ KÝ
+            log.error("Sai chữ ký VNPAY Return cho PNR: {}", pnrCode);
+            if ("android".equals(platform)) return "flightbooking://payment-result?code=99";
+            return reactBaseUrl + "/payment-error?message=invalid-signature";
         }
     }
 
@@ -279,21 +284,18 @@ public class PaymentService {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         formatter.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
 
-        // Lấy thời gian tạo đơn hàng làm vnp_TransactionDate (phải khớp với lúc tạo URL)
         Date txnDate = Date.from(booking.getCreatedAt().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant());
         String vnp_TransactionDate = formatter.format(txnDate);
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         String vnp_CreateDate = formatter.format(cld.getTime());
 
-        // 1. TẠO CHUỖI HASH DATA (Phải chuẩn xác từng dấu gạch đứng | )
         String hashData = String.join("|",
                 vnp_RequestId, vnp_Version, vnp_Command, vnp_TmnCode,
                 vnp_TxnRef, vnp_TransactionDate, vnp_CreateDate, vnp_IpAddr, vnp_OrderInfo);
 
         String vnp_SecureHash = VNPayConfig.hmacSHA512(secretKey, hashData);
 
-        // 2. ĐÓNG GÓI JSON BODY
         Map<String, String> requestData = new HashMap<>();
         requestData.put("vnp_RequestId", vnp_RequestId);
         requestData.put("vnp_Version", vnp_Version);
@@ -306,7 +308,6 @@ public class PaymentService {
         requestData.put("vnp_IpAddr", vnp_IpAddr);
         requestData.put("vnp_SecureHash", vnp_SecureHash);
 
-        // 3. GỌI HTTP POST SANG VNPAY
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -319,19 +320,19 @@ public class PaymentService {
             if (responseBody != null) {
                 String responseCode = (String) responseBody.get("vnp_ResponseCode");
                 String transactionStatus = (String) responseBody.get("vnp_TransactionStatus");
+
                 if ("00".equals(responseCode)) {
                     String vnpTransactionNo = (String) responseBody.get("vnp_TransactionNo");
                     String vnpBankTranNo = (String) responseBody.get("vnp_BankTranNo");
 
                     if ("00".equals(transactionStatus)) {
                         if (booking.getStatus() != BookingStatus.CONFIRMED) {
-
                             if (vnpTransactionNo != null && !transactionRepository.existsByTransactionNo(vnpTransactionNo)) {
                                 Transaction transaction = Transaction.builder()
                                         .bookingId(booking.getId())
                                         .amount(booking.getTotalAmount())
                                         .paymentMethod("VNPAY")
-                                        .transactionNo(vnpTransactionNo) // Mã này 100% có
+                                        .transactionNo(vnpTransactionNo)
                                         .bankRefNo(vnpBankTranNo)
                                         .gatewayResponse(responseBody.toString())
                                         .status(PaymentStatus.SUCCESS)
@@ -343,11 +344,19 @@ public class PaymentService {
                             bookingService.issueTicketsForBooking(booking.getId());
                             emailService.sendBookingConfirmationEmail(bookingService.getBookingById(booking.getId()));
                             log.info("JOB ĐỐI SOÁT ĐÃ CỨU HỘ THÀNH CÔNG VÉ: {}", booking.getPnrCode());
-
                         }
                         return PaymentStatus.SUCCESS;
                     } else {
                         log.warn("VNPAY báo giao dịch thất bại cho PNR {}. Mã lỗi: {}", booking.getPnrCode(), transactionStatus);
+
+                        // ⚡ FIX: Chống Duplicate Key
+                        if (vnpBankTranNo == null || vnpBankTranNo.isEmpty()) {
+                            vnpBankTranNo = "CANCEL_" + UUID.randomUUID().toString().substring(0, 8);
+                        }
+                        if (vnpTransactionNo == null || vnpTransactionNo.isEmpty() || "0".equals(vnpTransactionNo)) {
+                            vnpTransactionNo = "CANCEL_" + UUID.randomUUID().toString().substring(0, 8);
+                        }
+
                         Transaction transaction = Transaction.builder()
                                 .bookingId(booking.getId())
                                 .amount(booking.getTotalAmount())
@@ -362,27 +371,39 @@ public class PaymentService {
                         return PaymentStatus.FAILED;
                     }
                 }
-                // 2. NẾU VNPAY BÁO KHÔNG TÌM THẤY GIAO DỊCH (Mã 91)
+                // NẾU VNPAY BÁO KHÔNG TÌM THẤY GIAO DỊCH (Mã 91)
                 else if ("91".equals(responseCode)) {
                     log.info("Khách hàng chưa từng quét mã/nhập thẻ cho PNR: {}", booking.getPnrCode());
+
+                    // ⚡ FIX: Chống Duplicate Key
+                    Transaction transaction = Transaction.builder()
+                            .bookingId(booking.getId())
+                            .amount(booking.getTotalAmount())
+                            .paymentMethod("VNPAY")
+                            .transactionNo("CANCEL_" + UUID.randomUUID().toString().substring(0, 8))
+                            .bankRefNo("CANCEL_" + UUID.randomUUID().toString().substring(0, 8))
+                            .gatewayResponse(responseBody.toString())
+                            .status(PaymentStatus.FAILED)
+                            .build();
+                    transactionRepository.save(transaction);
+
                     return PaymentStatus.FAILED;
                 }
             }
         } catch (Exception e) {
             log.error("Lỗi khi gọi API Đối soát VNPAY cho PNR: {}", booking.getPnrCode(), e);
         }
-        // Nếu gọi API có lỗi mạng, trả về PENDING để lần quét Job sau (1 phút nữa) gọi lại
+
         return PaymentStatus.PENDING;
     }
 
     public Map<String, String> verifyPaymentStatusImmediately(String pnrCode) {
         Booking booking = bookingService.getBookingEntityByPnr(pnrCode);
-        // 1. Nếu IPN đã chạy mượt mà trước đó rồi -> Trả về luôn
+
         if (booking.getStatus() == BookingStatus.CONFIRMED) {
             return Map.of("status", "SUCCESS", "message", "Thanh toán thành công");
         }
 
-        // 2. Nếu vẫn thấy AWAITING_PAYMENT (IPN rớt mạng) -> ÉP GỌI VNPAY NGAY LẬP TỨC!
         if (booking.getStatus() == BookingStatus.AWAITING_PAYMENT) {
             PaymentStatus actualStatus = queryTransaction(booking);
 
@@ -393,7 +414,6 @@ public class PaymentService {
             }
         }
 
-        // 3. Các trạng thái khác (PENDING, CANCELLED...)
         return Map.of("status", booking.getStatus().name(), "message", "Trạng thái hiện tại của vé: " + booking.getStatus().name());
     }
 }
