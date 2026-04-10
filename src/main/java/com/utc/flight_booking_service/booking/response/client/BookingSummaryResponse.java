@@ -1,6 +1,7 @@
 package com.utc.flight_booking_service.booking.response.client;
 
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
+import com.utc.flight_booking_service.inventory.entity.FlightClassType;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -24,4 +25,9 @@ public class BookingSummaryResponse {
     String origin;
     String destination;
     LocalDateTime departureTime;
+    //Trung them
+    LocalDateTime arrivalTime;       // NEW: Arrival time of the flight
+    FlightClassType classType;       // NEW: Class type (ECONOMY, BUSINESS, etc.)
+    Integer passengerCount;          // NEW: Number of passengers in booking
+
 }
