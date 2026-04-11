@@ -26,7 +26,7 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
             "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", "/bookings/**", "/users/forgot-password", "/flights/**"};
     private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
-            "/payments/**", "/flights/**","/ancillary-catalogs/**", "/v1/airports/**"
+            "/payments/**", "/flights/**","/ancillary-catalogs/**", "/v1/airports/**", "/v1/airlines/**"
 
     };
 
