@@ -237,7 +237,7 @@ public class PaymentService {
             String fieldName = params.nextElement();
             String fieldValue = request.getParameter(fieldName);
 
-            // ⚡ FIX CHỮ KÝ: Bắt buộc lọc các tham số của VNPAY, bỏ qua biến 'platform'
+            // ⚡ Lọc tham số VNPAY để kiểm tra chữ ký
             if ((fieldValue != null) && (fieldValue.length() > 0) && fieldName.startsWith("vnp_")) {
                 fields.put(fieldName, fieldValue);
             }
@@ -248,26 +248,37 @@ public class PaymentService {
         fields.remove("vnp_SecureHash");
         String signValue = VNPayConfig.hashAllFields(fields, secretKey);
 
+        // Lấy thông tin từ VNPay trả về
         String pnrCode = request.getParameter("vnp_TxnRef");
-        String platform = request.getParameter("platform"); // Lấy biến platform ra để check
+        String platform = request.getParameter("platform");
         String responseCode = request.getParameter("vnp_ResponseCode");
 
-        String reactBaseUrl = "http://localhost:5173"; // Trả về đúng Port React của bạn
+        // ⚡ BƯỚC QUAN TRỌNG: Truy vấn Booking từ DB để lấy ID
+        Booking booking = bookingService.getBookingEntityByPnr(pnrCode);
+
+        String reactBaseUrl = "http://localhost:5173";
 
         if (signValue.equals(vnp_SecureHash)) {
+            // --- XỬ LÝ CHO ANDROID ---
+            if ("android".equals(platform)) {
+                // Nối đầy đủ mã lỗi, PNR và BookingId vào Deep Link
+                return "flightbooking://payment-result?code=" + responseCode +
+                        "&pnrCode=" + pnrCode +
+                        "&bookingId=" + (booking != null ? booking.getId() : "");
+            }
+
+            // --- XỬ LÝ CHO WEB (REACT) ---
             if ("00".equals(responseCode)) {
-                // THÀNH CÔNG
-                if ("android".equals(platform)) return "flightbooking://payment-result?code=00";
                 return reactBaseUrl + "/payment-success?" + request.getQueryString();
             } else {
-                // THẤT BẠI
-                if ("android".equals(platform)) return "flightbooking://payment-result?code=" + responseCode;
                 return reactBaseUrl + "/payment-failed?pnr=" + pnrCode;
             }
         } else {
             // SAI CHỮ KÝ
             log.error("Sai chữ ký VNPAY Return cho PNR: {}", pnrCode);
-            if ("android".equals(platform)) return "flightbooking://payment-result?code=99";
+            if ("android".equals(platform)) {
+                return "flightbooking://payment-result?code=99&pnrCode=" + pnrCode;
+            }
             return reactBaseUrl + "/payment-error?message=invalid-signature";
         }
     }
