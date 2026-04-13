@@ -353,6 +353,8 @@ public class BookingServiceImpl implements BookingService {
                 .status(booking.getStatus())
                 .totalAmount(booking.getTotalAmount())
                 .createdAt(booking.getCreatedAt())
+                //Trung them 1 dong
+                .passengerCount(booking.getPassengers() != null ? booking.getPassengers().size() : 0)
                 .build();
 
         if (booking.getBookingFlights() != null && !booking.getBookingFlights().isEmpty()) {
@@ -366,6 +368,9 @@ public class BookingServiceImpl implements BookingService {
             summary.setOrigin(flightInfo.getOrigin());
             summary.setDestination(flightInfo.getDestination());
             summary.setDepartureTime(firstBookingFlight.getOriginDepartureTime());
+            //Trung them 2 dong
+            summary.setArrivalTime(firstBookingFlight.getOriginArrivalTime());
+            summary.setClassType(flightInfo.getClassType());
         }
         return summary;
     }
