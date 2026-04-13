@@ -3,8 +3,7 @@ FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-RUN mvn clean package -DskipTests
-
+RUN mvn clean package -DskipTests -Dmaven.test.skip=true -Dfile.encoding=UTF-8
 # Stage 2: Chạy code với Java 21 (bản Alpine siêu nhẹ)
 FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
