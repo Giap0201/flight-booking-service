@@ -128,8 +128,16 @@ public class BookingServiceImpl implements BookingService {
         booking.setTotalAmount(totalBookingAmount);
         booking.setTotalFareAmount(totalFare);
         booking.setTotalTaxAmount(totalTax);
-        Booking savedBooking = bookingRepository.save(booking);
-        return bookingMapper.toBookingCreatedResponse(savedBooking);
+        try {
+            Booking savedBooking = bookingRepository.save(booking);
+            return bookingMapper.toBookingCreatedResponse(savedBooking);
+        } catch (Exception e) {
+            for (BookingFlightRequest bookingFlightRequest : request.getFlights()) {
+                flightClassService.increaseSeats(bookingFlightRequest.getFlightClassId(), totalPassengers);
+            }
+            log.error("Lỗi khi tạo booking, đã hoàn lại ghế. Exception: ", e);
+            throw new AppException(ErrorCode.BOOKING_CREATION_FAILED);
+        }
     }
 
     @Override
