@@ -1,6 +1,7 @@
 package com.utc.flight_booking_service.identity.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,7 +16,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.List;
 
@@ -23,28 +24,40 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    private final String[] PUBLIC_ENDPOINTS = {
-            "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", "/bookings/**", "/users/forgot-password"};
-    private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
-            "/payments/**", "/bookings/**"
 
+    // Danh sách các Endpoint công khai cho Auth và User
+    private final String[] PUBLIC_ENDPOINTS = {
+            "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh",
+            "/bookings/**", "/users/forgot-password", "/flights/**"
     };
+
+    // Danh sách các Endpoint công khai cho Thanh toán và Tra cứu
+    private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
+            "/payments/**", "/flights/**", "/ancillary-catalogs/**",
+            "/v1/airports/**", "/v1/airlines/**"
+    };
+
+    // Đọc danh sách Domain được phép từ biến môi trường app.cors.allowed-origins
+    // Nếu không tìm thấy trên Render, mặc định sẽ dùng localhost
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
+    private List<String> allowedOrigins;
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-
         httpSecurity
-                // 1. THÊM DÒNG NÀY ĐỂ KÍCH HOẠT CORS TRONG SECURITY CHAIN
+                // Kích hoạt cấu hình CORS từ Bean corsConfigurationSource bên dưới
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .authorizeHttpRequests(request -> request
+                        // Cho phép các yêu cầu POST công khai
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                        // Cho phép GET/POST cho các thông tin thanh toán và sân bay
                         .requestMatchers(HttpMethod.GET, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
-
-                        // Swagger
+                        .requestMatchers(HttpMethod.POST, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
+                        // Cấu hình cho Swagger UI
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -52,37 +65,40 @@ public class SecurityConfig {
                                 "/v3/api-docs",
                                 "/webjars/**"
                         ).permitAll()
-
+                        // Tất cả các yêu cầu còn lại phải đăng nhập
                         .anyRequest().authenticated()
                 )
 
-                // JWT Resource Server
+                // Cấu hình JWT Resource Server (Xác thực Token)
                 .oauth2ResourceServer(oauth2 ->
                         oauth2.jwt(jwtConfigurer -> jwtConfigurer
                                         .decoder(customJwtDecoder)
                                         .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
                 )
+                // Tắt CSRF vì chúng ta dùng JWT (stateless)
                 .csrf(AbstractHttpConfigurer::disable);
 
         return httpSecurity.build();
     }
 
-    // 2. CHỈNH SỬA LẠI BEAN NÀY
     @Bean
-    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        // Đã đổi sang port 5173 của Vite
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173"));
+        // Gán danh sách domain được phép truy cập
+        corsConfiguration.setAllowedOrigins(allowedOrigins);
+        // Các phương thức HTTP được phép
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        // Cho phép tất cả các Header
         corsConfiguration.setAllowedHeaders(List.of("*"));
-        corsConfiguration.setAllowCredentials(true); // Cần thiết nếu có dùng Cookie hoặc header Authorization
+        // Cho phép gửi kèm Credentials (Token, Cookie)
+        corsConfiguration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
 
-        return urlBasedCorsConfigurationSource;
+        return source;
     }
 
     @Bean

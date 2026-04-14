@@ -97,6 +97,7 @@ public class UserService implements IUserService {
         String name = context.getAuthentication().getName();
         User user = userRepository.findById(UUID.fromString(name)).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         userMapper.updateUser(user, request);
+        userRepository.save(user);
         return userMapper.toUserResponse(user);
     }
 

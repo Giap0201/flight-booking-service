@@ -30,5 +30,4 @@ public class BookingSummaryResponse {
     LocalDateTime arrivalTime;       // NEW: Arrival time of the flight
     FlightClassType classType;       // NEW: Class type (ECONOMY, BUSINESS, etc.)
     Integer passengerCount;          // NEW: Number of passengers in booking
-
 }

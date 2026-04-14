@@ -590,3 +590,5 @@ INSERT INTO airlines (code, created_at, updated_at, name, logo_url) VALUES
 ('LH', NOW(), NOW(),'Lufthansa', 'https://img.logo.dev/name/LH?token=pk_fDBJo_JTRm2WiIRgffk4Yw'),
 ('SQ', NOW(), NOW(),'Singapore Airlines', 'https://img.logo.dev/name/SQ?token=pk_fDBJo_JTRm2WiIRgffk4Yw')
 ON CONFLICT (code) DO NOTHING;
+
+CREATE SEQUENCE IF NOT EXISTS ticket_number_seq START 1000000;

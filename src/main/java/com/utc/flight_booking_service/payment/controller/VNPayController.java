@@ -22,11 +22,18 @@ public class VNPayController {
 
     PaymentService paymentService;
 
+    // 1. Thêm tham số platform vào API tạo URL
     @GetMapping("/create-url")
     public ApiResponse<String> createPaymentUrl(
             @RequestParam UUID bookingId,
+            @RequestParam(defaultValue = "web") String platform, // <-- THÊM DÒNG NÀY
             HttpServletRequest request) {
-        String paymentUrl = paymentService.createPaymentUrl(bookingId, request);
+
+        // Gợi ý: Bạn cần truyền biến platform này vào PaymentService
+        // để nối nó vào cái vnp_ReturnUrl. Ví dụ vnp_ReturnUrl sẽ thành:
+        // http://localhost:8080/api/payments/vnpay-return?platform=android
+        String paymentUrl = paymentService.createPaymentUrl(bookingId, platform, request);
+
         return ApiResponse.<String>builder()
                 .result(paymentUrl)
                 .build();
@@ -34,7 +41,10 @@ public class VNPayController {
 
     @GetMapping("/vnpay-return")
     public void vnpayReturn(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Lấy link đích trực tiếp từ Service (đã bao gồm cả logic web/app)
         String redirectUrl = paymentService.processReturn(request);
+
+        // Chuyển hướng luôn, không cần if/else gì ở đây nữa
         response.sendRedirect(redirectUrl);
     }
 
