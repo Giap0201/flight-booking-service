@@ -65,7 +65,7 @@ public enum ErrorCode {
     PASSENGERS_REQUIRED(2023, "Danh sách hành khách không được rỗng", HttpStatus.BAD_REQUEST ),
     CANNOT_CANCEL_BOOKING(2024, "Chỉ có thể hủy đơn đặt chỗ khi chưa thanh toán", HttpStatus.BAD_REQUEST),
     FORBIDDEN(2025, "Bạn không có quyền truy cập vào đơn đặt chỗ này", HttpStatus.FORBIDDEN),
-
+    BOOKING_CREATION_FAILED(2026, "Lỗi khi đặt vé", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // TRANSACTION
     TRANSACTION_NOT_FOUND(2050, "Không tìm thấy Transaction", HttpStatus.NOT_FOUND),
