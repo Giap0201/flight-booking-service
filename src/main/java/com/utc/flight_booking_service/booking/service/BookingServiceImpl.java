@@ -25,12 +25,10 @@ import com.utc.flight_booking_service.identity.dto.response.UserResponse;
 import com.utc.flight_booking_service.identity.service.IUserService;
 import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
 import com.utc.flight_booking_service.inventory.service.IFlightClassService;
+import com.utc.flight_booking_service.notification.service.EmailService;
 import com.utc.flight_booking_service.payment.dto.response.AdminTransactionResponse;
 import com.utc.flight_booking_service.payment.dto.response.ClientTransactionResponse;
 import com.utc.flight_booking_service.payment.entity.Transaction;
-import com.utc.flight_booking_service.payment.enums.PaymentStatus;
-import com.utc.flight_booking_service.payment.repository.TransactionRepository;
-import com.utc.flight_booking_service.payment.service.PaymentService;
 import com.utc.flight_booking_service.payment.service.TransactionService;
 import com.utc.flight_booking_service.payment.service.VNPayRefundService;
 import jakarta.transaction.Transactional;
@@ -38,7 +36,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -68,6 +65,7 @@ public class BookingServiceImpl implements BookingService {
     IUserService userService;
     TransactionService transactionService;
     VNPayRefundService vnPayRefundService;
+    EmailService emailService;
 
     @Override
     public BookingCreatedResponse createBooking(BookingRequest request) {
@@ -165,7 +163,6 @@ public class BookingServiceImpl implements BookingService {
 
 
     @Override
-    @Transactional // Bắt buộc phải có để giữ Session mở trong suốt quá trình hủy 1 vé
     public void cancelSingleBookingBySystem(UUID bookingId) {
         Booking booking = getBookingEntityById(bookingId);
 
@@ -351,30 +348,44 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Transactional
-    public void forceCancelPaidBooking(UUID bookingId) {
+    public void forceCancelAndRefund(UUID bookingId) {
         Booking booking = getBookingEntityById(bookingId);
-
-        if (booking.getStatus() != BookingStatus.PAID && booking.getStatus() != BookingStatus.CONFIRMED) {
-            throw new AppException(ErrorCode.CANNOT_CANCEL_BOOKING);
-        }
-         Transaction transaction = transactionService.findSuccessfulVnpayTransactionByBookingId(bookingId);
-        int totalPassengers = booking.getPassengers().size();
-        for (BookingFlight bookingFlight : booking.getBookingFlights()) {
+        BookingStatus currentStatus = booking.getStatus();
+        boolean isPaidAndNeedsRefund = (currentStatus == BookingStatus.PAID || currentStatus == BookingStatus.CONFIRMED);
+        processCancellationLogic(booking);
+        if (isPaidAndNeedsRefund) {
             try {
-                flightClassService.increaseSeats(bookingFlight.getFlightClassId(), totalPassengers);
+                Transaction transaction = transactionService.findSuccessfulVnpayTransactionByBookingId(bookingId);
+                if (transaction != null) {
+                    vnPayRefundService.processRealRefund(booking, transaction);
+                    log.info("Admin đã ép hủy và hoàn tiền thành công PNR: {}", booking.getPnrCode());
+                } else {
+                    log.warn("Booking {} trạng thái PAID nhưng không tìm thấy giao dịch VNPay hợp lệ.", booking.getPnrCode());
+                }
             } catch (Exception e) {
-                log.error("Lỗi nhả ghế", e);
+                log.error("Lỗi khi gọi API hoàn tiền VNPay cho Booking {}: {}", booking.getPnrCode(), e.getMessage());
             }
+        } else {
+            log.info("Admin đã hủy PNR: {} (Vé chưa thanh toán, không cần hoàn tiền).", booking.getPnrCode());
         }
-        booking.setStatus(BookingStatus.CANCELLED);
-        booking.getTickets().forEach(ticket -> ticket.setStatus(TicketStatus.CANCELLED));
-        bookingRepository.save(booking);
-        vnPayRefundService.processRealRefund(booking, transaction);
-
-        log.info("Admin đã ép hủy thành công PNR: {} và gọi API hoàn tiền.", booking.getPnrCode());
     }
 
+    @Override
+    public void resendBookingEmail(UUID bookingId) {
+        BookingDetailResponse booking = getBookingById(bookingId);
+
+        BookingStatus status = booking.getStatus();
+
+        if (status != BookingStatus.CONFIRMED && status != BookingStatus.PAID) {
+            log.warn("Không thể gửi lại email. BookingId: {}, PNR: {}, Status: {}",
+                    bookingId, booking.getPnrCode(), status);
+            throw new AppException(ErrorCode.INVALID_BOOKING_STATUS);
+        }
+        emailService.sendBookingConfirmationEmail(booking);
+
+        log.info("Gửi lại email thành công. BookingId: {}, PNR: {}",
+                bookingId, booking.getPnrCode());
+    }
 
     private String handlePnrCode() {
         String pnrCode;
