@@ -57,22 +57,26 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, JpaSpec
             @Param("now") LocalDateTime now,
             Pageable pageable);
 
-    // 1. Tính tổng doanh thu trong 1 khoảng thời gian (Chỉ tính đơn đã thanh toán/xác nhận)
-    @Query("SELECT SUM(b.totalAmount) FROM Booking b WHERE b.status IN :statuses AND b.createdAt BETWEEN :startDate AND :endDate")
-    BigDecimal calculateTotalRevenue(@Param("statuses") List<BookingStatus> statuses, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    // 1. Tính tổng doanh thu thuần (Thu - Hoàn) trong 1 khoảng thời gian
+    // Lưu ý: Query thẳng vào entity Transaction, dùng COALESCE để tránh lỗi Null
+    @Query("SELECT COALESCE(SUM(CASE WHEN t.paymentMethod = 'VNPAY' THEN t.amount WHEN t.paymentMethod = 'VNPAY_REFUND' THEN -t.amount ELSE 0 END), 0) " +
+            "FROM Transaction t WHERE t.status = 'SUCCESS' AND t.createdAt BETWEEN :startDate AND :endDate")
+    BigDecimal calculateTotalRevenue(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    // 2. Đếm số lượng Booking theo trạng thái
+    // 2. Đếm số lượng Booking theo trạng thái (Giữ nguyên của bạn vì đã chuẩn)
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.status IN :statuses AND b.createdAt BETWEEN :startDate AND :endDate")
     long countBookingsByStatus(@Param("statuses") List<BookingStatus> statuses, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    // 3. Biểu đồ doanh thu theo từng ngày (Sử dụng Native Query để ép kiểu Date)
-    @Query(value = "SELECT DATE(created_at) as reportDate, SUM(total_amount) as revenue, COUNT(id) as bookingCount " +
-            "FROM bookings " +
-            "WHERE status IN ('PAID', 'CONFIRMED') AND created_at BETWEEN :startDate AND :endDate " +
+    // 3. Biểu đồ doanh thu thuần theo từng ngày (Native Query trỏ vào bảng transactions)
+    // Dùng COUNT(DISTINCT booking_id) để đếm số lượng vé có giao dịch trong ngày đó
+    @Query(value = "SELECT DATE(created_at) as reportDate, " +
+            "SUM(CASE WHEN payment_method = 'VNPAY' THEN amount WHEN payment_method = 'VNPAY_REFUND' THEN -amount ELSE 0 END) as revenue, " +
+            "COUNT(DISTINCT booking_id) as bookingCount " +
+            "FROM transactions " +
+            "WHERE status = 'SUCCESS' AND created_at BETWEEN :startDate AND :endDate " +
             "GROUP BY DATE(created_at) " +
             "ORDER BY reportDate ASC", nativeQuery = true)
     List<DailyRevenueResponse> getDailyRevenueChart(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
-
 }
 
 

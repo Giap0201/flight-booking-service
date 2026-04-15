@@ -58,4 +58,6 @@ public interface BookingService {
     // Lay thong tin booking danh cho admin (ca transaction)
     AdminBookingDetailResponse getBookingDetailsForAdmin(UUID id);
 
+    void forceCancelPaidBooking(UUID bookingId);
+
 }

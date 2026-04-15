@@ -1,8 +1,15 @@
 package com.utc.flight_booking_service.payment.service;
 
 import com.utc.flight_booking_service.booking.entity.Booking;
+import com.utc.flight_booking_service.booking.entity.BookingFlight;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
+import com.utc.flight_booking_service.booking.enums.TicketStatus;
+import com.utc.flight_booking_service.booking.repository.BookingRepository;
 import com.utc.flight_booking_service.booking.service.BookingService;
+import com.utc.flight_booking_service.exception.AppException;
+import com.utc.flight_booking_service.exception.ErrorCode;
+import com.utc.flight_booking_service.inventory.service.FlightClassService;
+import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import com.utc.flight_booking_service.notification.service.EmailService;
 import com.utc.flight_booking_service.payment.config.VNPayConfig;
 import com.utc.flight_booking_service.payment.entity.Transaction;
@@ -248,8 +255,6 @@ public class PaymentService {
         Booking booking = bookingService.getBookingEntityByPnr(pnrCode);
 
         // ⚡ FIX 3: Sử dụng biến reactBaseUrl đã được khai báo @Value ở đầu class
-        // (Xóa dòng String reactBaseUrl = "http://localhost:5173"; đi)
-
         if (signValue.equals(vnp_SecureHash)) {
             if ("android".equals(platform)) {
                 return "flightbooking://payment-result?code=" + responseCode +
@@ -397,6 +402,7 @@ public class PaymentService {
         return PaymentStatus.PENDING;
     }
 
+
     public Map<String, String> verifyPaymentStatusImmediately(String pnrCode) {
         Booking booking = bookingService.getBookingEntityByPnr(pnrCode);
 
@@ -416,4 +422,8 @@ public class PaymentService {
 
         return Map.of("status", booking.getStatus().name(), "message", "Trạng thái hiện tại của vé: " + booking.getStatus().name());
     }
+
+
+
+
 }

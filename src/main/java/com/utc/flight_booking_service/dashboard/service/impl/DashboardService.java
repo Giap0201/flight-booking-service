@@ -41,7 +41,7 @@ public class DashboardService implements IDashboardService {
         LocalDateTime start = (startDate != null) ? startDate.atStartOfDay() : LocalDate.now().minusDays(30).atStartOfDay();
         LocalDateTime end = (endDate != null) ? endDate.atTime(LocalTime.MAX) : LocalDate.now().atTime(LocalTime.MAX);
 
-        BigDecimal revenue = bookingRepository.calculateTotalRevenue(SUCCESS_STATUSES, start, end);
+        BigDecimal revenue = bookingRepository.calculateTotalRevenue(start, end);
         long successBookings = bookingRepository.countBookingsByStatus(SUCCESS_STATUSES, start, end);
         long cancelledBookings = bookingRepository.countBookingsByStatus(CANCEL_STATUSES, start, end);
         long totalTicketIssued = ticketRepository.countTotalIssuedTickets(start, end);

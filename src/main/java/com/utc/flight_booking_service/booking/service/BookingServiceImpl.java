@@ -27,12 +27,18 @@ import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponse
 import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import com.utc.flight_booking_service.payment.dto.response.AdminTransactionResponse;
 import com.utc.flight_booking_service.payment.dto.response.ClientTransactionResponse;
+import com.utc.flight_booking_service.payment.entity.Transaction;
+import com.utc.flight_booking_service.payment.enums.PaymentStatus;
+import com.utc.flight_booking_service.payment.repository.TransactionRepository;
+import com.utc.flight_booking_service.payment.service.PaymentService;
 import com.utc.flight_booking_service.payment.service.TransactionService;
+import com.utc.flight_booking_service.payment.service.VNPayRefundService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -61,6 +67,7 @@ public class BookingServiceImpl implements BookingService {
     IFlightClassService flightClassService;
     IUserService userService;
     TransactionService transactionService;
+    VNPayRefundService vnPayRefundService;
 
     @Override
     public BookingCreatedResponse createBooking(BookingRequest request) {
@@ -342,6 +349,32 @@ public class BookingServiceImpl implements BookingService {
                 .userId(booking.getUserId())
                 .build();
     }
+
+    @Override
+    @Transactional
+    public void forceCancelPaidBooking(UUID bookingId) {
+        Booking booking = getBookingEntityById(bookingId);
+
+        if (booking.getStatus() != BookingStatus.PAID && booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new AppException(ErrorCode.CANNOT_CANCEL_BOOKING);
+        }
+         Transaction transaction = transactionService.findSuccessfulVnpayTransactionByBookingId(bookingId);
+        int totalPassengers = booking.getPassengers().size();
+        for (BookingFlight bookingFlight : booking.getBookingFlights()) {
+            try {
+                flightClassService.increaseSeats(bookingFlight.getFlightClassId(), totalPassengers);
+            } catch (Exception e) {
+                log.error("Lỗi nhả ghế", e);
+            }
+        }
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.getTickets().forEach(ticket -> ticket.setStatus(TicketStatus.CANCELLED));
+        bookingRepository.save(booking);
+        vnPayRefundService.processRealRefund(booking, transaction);
+
+        log.info("Admin đã ép hủy thành công PNR: {} và gọi API hoàn tiền.", booking.getPnrCode());
+    }
+
 
     private String handlePnrCode() {
         String pnrCode;
