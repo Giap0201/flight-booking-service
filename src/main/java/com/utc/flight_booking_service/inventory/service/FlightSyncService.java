@@ -9,6 +9,7 @@ import com.utc.flight_booking_service.inventory.repository.AircraftRepository;
 import com.utc.flight_booking_service.inventory.repository.AirlineRepository;
 import com.utc.flight_booking_service.inventory.repository.AirportRepository;
 import com.utc.flight_booking_service.inventory.repository.FlightRepository;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -16,6 +17,7 @@ import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +27,7 @@ import java.util.Optional;
 public class FlightSyncService implements IFlightSyncService{
     AviationstackClient aviationClient;
     FlightExternalMapper flightMapper;
-    FlightEnrichmentService enrichmentService;
+    IFlightEnrichmentService enrichmentService;
     AirlineRepository airlineRepository;
     AirportRepository airportRepository;
     AircraftRepository aircraftRepository;
@@ -35,29 +37,48 @@ public class FlightSyncService implements IFlightSyncService{
     @Value("${aviationstack.api.key}")
     private String apiKey;
 
+    @Transactional // Đảm bảo toàn bộ batch save được thực thi trong 1 transaction duy nhất
     public String fetchAndMapFlights() {
+        // Mặc định API limit là 100, tùy thuộc vào cấu hình plan
         AviationResponseDTO response = aviationClient.getFlights(apiKey, 100);
 
-        if (response == null || response.getData() == null) return "Không có dữ liệu từ API";
+        if (response == null || response.getData() == null || response.getData().isEmpty()) {
+            return "Không có dữ liệu từ API";
+        }
 
         int successCount = 0;
         int failCount = 0;
 
+        // Khởi tạo danh sách chứa các entity cần update hoặc insert (Batch)
+        List<Flight> flightsToSave = new ArrayList<>();
+
         for (var dto : response.getData()) {
-            // BỌC TRY-CATCH CHO TỪNG CHUYẾN BAY
             try {
-                if (dto.getDeparture() == null || dto.getArrival() == null || dto.getAirline() == null) continue;
+                // 1. Kiểm tra tính toàn vẹn của dữ liệu gốc
+                if (dto.getDeparture() == null || dto.getArrival() == null || dto.getAirline() == null || dto.getFlight() == null) continue;
                 if (dto.getDeparture().getIata() == null || dto.getArrival().getIata() == null) continue;
 
-                String aviationFlightId = flightMapper.generateAviationId(dto);
+                // 2. Tự tính toán ID đồng bộ trực tiếp tại Service
+                String aviationFlightId = generateSyncId(dto);
+                if (aviationFlightId == null) {
+                    failCount++;
+                    continue;
+                }
+
                 Optional<Flight> existingFlightOpt = flightRepository.findByAviationFlightId(aviationFlightId);
 
                 if (existingFlightOpt.isPresent()) {
                     // CẬP NHẬT (UPSERT)
                     Flight existingFlight = existingFlightOpt.get();
-                    existingFlight.setStatus(FlightStatus.valueOf(dto.getFlightStatus().toUpperCase()));
+                    existingFlight.setAviationFlightId(aviationFlightId);
 
-                    flightRepository.save(existingFlight);
+                    // Xử lý an toàn (Null-safe) cho Flight Status
+                    String rawStatus = dto.getFlightStatus();
+                    if (rawStatus != null && !rawStatus.trim().isEmpty()) {
+                        existingFlight.setStatus(FlightStatus.valueOf(rawStatus.toUpperCase()));
+                    }
+
+                    flightsToSave.add(existingFlight);
                     successCount++;
                 } else {
                     // TẠO MỚI (INSERT)
@@ -75,6 +96,7 @@ public class FlightSyncService implements IFlightSyncService{
                     Aircraft aircraft = getOrCreateAircraft(dto.getAircraft());
 
                     Flight flight = flightMapper.toEntity(dto);
+                    flight.setAviationFlightId(aviationFlightId);
                     flight.setAirline(airline);
                     flight.setOrigin(origin);
                     flight.setDestination(destination);
@@ -83,24 +105,37 @@ public class FlightSyncService implements IFlightSyncService{
                     List<FlightClass> flightClasses = enrichmentService.enrichFlight(flight, aircraft);
                     flight.setFlightClasses(flightClasses);
 
-                    flightRepository.save(flight);
+                    flightsToSave.add(flight);
                     successCount++;
                 }
             } catch (Exception e) {
-                // NẾU LỖI 1 CHUYẾN, CHỈ LOG RA VÀ CHẠY TIẾP VÒNG LẶP CHO CHUYẾN KHÁC
-                System.err.println("Lỗi khi lưu chuyến bay " + flightMapper.generateAviationId(dto) + ": " + e.getMessage());
+                // Log chi tiết, không làm gián đoạn vòng lặp
+                System.err.println("Lỗi khi xử lý chuyến bay từ API: " + e.getMessage());
                 failCount++;
             }
         }
 
-        System.out.println("Tổng kết Sync: Thành công " + successCount + ", Thất bại " + failCount);
+        // 3. THỰC THI BATCH SAVE - Điểm mấu chốt cho High Performance
+        if (!flightsToSave.isEmpty()) {
+            flightRepository.saveAll(flightsToSave);
+        }
 
+        System.out.println("Tổng kết Sync: Thành công " + successCount + ", Thất bại " + failCount);
         return String.format("Đồng bộ hoàn tất: %d thành công, %d thất bại", successCount, failCount);
     }
 
     // ==========================================
     // LOGIC FIND OR CREATE
     // ==========================================
+
+    private String generateSyncId(AviationFlightDTO dto) {
+        if (dto.getAirline() == null || dto.getAirline().getIata() == null ||
+                dto.getFlight() == null || dto.getFlight().getNumber() == null ||
+                dto.getDeparture() == null || dto.getDeparture().getScheduled() == null) {
+            return null;
+        }
+        return dto.getAirline().getIata() + dto.getFlight().getNumber() + "_" + dto.getDeparture().getScheduled();
+    }
 
     private Airport getOrCreateAirport(String code, String name, String timezone) {
         String safeCode = (code != null && !code.trim().isEmpty()) ? code : "UNK";

@@ -11,5 +11,7 @@ import lombok.experimental.FieldDefaults;
 public class AirlineResponseDTO {
     String code;
     String name;
-    String logoUrl;
+    String cityCode;
+    String countryCode;
+    String timezone;
 }
