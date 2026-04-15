@@ -100,7 +100,14 @@ public enum ErrorCode {
     UPDATE_SEAT_FAILED(3006, "Ghế đang được người khác đặt, vui lòng thử lại", HttpStatus.CONFLICT),
     NOT_ENOUGH_SEATS(3007, "Không đủ số lượng ghế trống", HttpStatus.BAD_REQUEST),
     MIN_SEAT_RESERVATION(3009, "Số lượng ghế đặt phải ít nhất là 1", HttpStatus.BAD_REQUEST),
-    INVALID_PRICE(3010, "Giá vé không được nhỏ hơn 0", HttpStatus.BAD_REQUEST)
+    INVALID_PRICE(3010, "Giá vé không được nhỏ hơn 0", HttpStatus.BAD_REQUEST),
+    // AIRPORT (31xx)
+    AIRPORT_NOT_FOUND(3100, "Không tìm thấy sân bay", HttpStatus.NOT_FOUND),
+    AIRPORT_EXISTED(3101, "Mã sân bay (IATA) đã tồn tại", HttpStatus.BAD_REQUEST),
+    AIRPORT_CODE_REQUIRED(3102, "Mã sân bay không được để trống", HttpStatus.BAD_REQUEST),
+    AIRPORT_CODE_INVALID(3103, "Mã sân bay phải có đúng 3 ký tự", HttpStatus.BAD_REQUEST),
+    AIRPORT_NAME_REQUIRED(3104, "Tên sân bay không được để trống", HttpStatus.BAD_REQUEST),
+    CITY_CODE_REQUIRED(3105, "Mã thành phố không được để trống", HttpStatus.BAD_REQUEST)
 
     ;
     private final int code;
