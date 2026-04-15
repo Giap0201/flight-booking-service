@@ -24,7 +24,6 @@ public interface FlightExternalMapper {
     @Mapping(target = "aircraft.code", source = "aircraft.iata")
     @Mapping(target = "origin.code", source = "departure.iata")
     @Mapping(target = "destination.code", source = "arrival.iata")
-    @Mapping(target = "aviationFlightId", expression = "java(generateAviationId(dto))")
     Flight toEntity(AviationFlightDTO dto);
 
     @AfterMapping
@@ -55,11 +54,6 @@ public interface FlightExternalMapper {
             dest.setCode(TOP_GLOBAL_AIRPORTS[random.nextInt(TOP_GLOBAL_AIRPORTS.length)]);
             flight.setDestination(dest);
         }
-    }
-
-    default String generateAviationId(AviationFlightDTO dto) {
-        if (dto.getAirline() == null || dto.getFlight() == null) return null;
-        return dto.getAirline().getIata() + dto.getFlight().getNumber() + "_" + dto.getDeparture().getScheduled();
     }
 
     default LocalDateTime mapStringToLocalDateTime(String value) {
