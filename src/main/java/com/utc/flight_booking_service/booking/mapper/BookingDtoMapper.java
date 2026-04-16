@@ -105,6 +105,8 @@ public class BookingDtoMapper {
                     .firstName(passenger.getFirstName())
                     .lastName(passenger.getLastName())
                     .type(passenger.getType())
+                    .dateOfBirth(passenger.getDateOfBirth())
+                    .gender(passenger.getGender())
                     .tickets(ticketResponses)
                     .build();
         }).toList();
