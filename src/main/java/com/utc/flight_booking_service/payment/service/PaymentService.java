@@ -134,8 +134,6 @@ public class PaymentService {
     }
 
     public Map<String, String> processIpn(HttpServletRequest request) {
-        // (Giữ nguyên logic cực kỳ chặt chẽ của bạn ở hàm này)
-        // ... (phần code processIpn cũ không đổi)
         Map<String, String> response = new HashMap<>();
         try {
             Map<String, String> fields = new HashMap<>();
@@ -212,7 +210,7 @@ public class PaymentService {
             transactionRepository.save(transaction);
 
             if ("00".equals(responseCode)) {
-                bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
+//                bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                 bookingService.issueTicketsForBooking(booking.getId());
                 emailService.sendBookingConfirmationEmail(bookingService.getBookingById(booking.getId()));
                 log.info("Gửi mail thành công cho PNR: {}", booking.getPnrCode());
@@ -348,7 +346,7 @@ public class PaymentService {
                                 transactionRepository.save(transaction);
                             }
 
-                            bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
+//                            bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                             bookingService.issueTicketsForBooking(booking.getId());
                             emailService.sendBookingConfirmationEmail(bookingService.getBookingById(booking.getId()));
                             log.info("JOB ĐỐI SOÁT ĐÃ CỨU HỘ THÀNH CÔNG VÉ: {}", booking.getPnrCode());

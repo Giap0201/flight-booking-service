@@ -53,7 +53,7 @@ public enum ErrorCode {
     CANNOT_CREATE_PNR_CODE(2011, "Không thể tạo ra mã PNR_CODE", HttpStatus.INTERNAL_SERVER_ERROR),
     BOOKING_NOT_PAID_YET(2012, "Đơn đặt chưa được thanh toán hoặc đã bị huỷ", HttpStatus.BAD_REQUEST),
     BOOKING_CANCELLED(2013, "Đơn đặt đã bị huỷ", HttpStatus.BAD_REQUEST),
-//    USER_REQUIRED (2014, "Không thể xác định người dùng", HttpStatus.INTERNAL_SERVER_ERROR),
+    //    USER_REQUIRED (2014, "Không thể xác định người dùng", HttpStatus.INTERNAL_SERVER_ERROR),
     PNR_REQUIRED(2015, "Mã pnr không được bỏ trống", HttpStatus.BAD_REQUEST),
     CONTACT_EMAIL_REQUIRED(2016, "Email liên hệ không được trống", HttpStatus.BAD_REQUEST),
     CONTACT_NAME_REQUIRED(2017, "Tên liên hệ không được bỏ trống", HttpStatus.BAD_REQUEST),
@@ -67,6 +67,11 @@ public enum ErrorCode {
     FORBIDDEN(2025, "Bạn không có quyền truy cập vào đơn đặt chỗ này", HttpStatus.FORBIDDEN),
     BOOKING_CREATION_FAILED(2026, "Lỗi khi đặt vé", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_BOOKING_STATUS(2027, "Trạng thái booking không hợp lệ", HttpStatus.BAD_REQUEST),
+    DEPARTURE_TIME_TOO_CLOSE(2028, "Thời gian cất cánh quá sát, không thể thực hiện thao tác này", HttpStatus.BAD_REQUEST),
+    BOOKING_ALREADY_ISSUED(2029, "Đơn đặt chỗ này đã được xuất vé từ trước", HttpStatus.BAD_REQUEST),
+    NON_REFUNDABLE(2030, "Vé không hỗ trợ hoàn tiền do quá sát giờ khởi hành", HttpStatus.BAD_REQUEST),
+    REFUND_FAILED(2031, "Xử lý hoàn tiền thất bại, hệ thống chưa hủy vé. Vui lòng thử lại", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // TRANSACTION
     TRANSACTION_NOT_FOUND(2050, "Không tìm thấy Transaction", HttpStatus.NOT_FOUND),
 
