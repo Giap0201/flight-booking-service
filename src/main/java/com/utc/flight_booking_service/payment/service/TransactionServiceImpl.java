@@ -1,10 +1,13 @@
 package com.utc.flight_booking_service.payment.service;
 
 import com.utc.flight_booking_service.common.PageResponse;
+import com.utc.flight_booking_service.exception.AppException;
+import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.payment.dto.request.TransactionSearchRequest;
 import com.utc.flight_booking_service.payment.dto.response.AdminTransactionResponse;
 import com.utc.flight_booking_service.payment.dto.response.ClientTransactionResponse;
 import com.utc.flight_booking_service.payment.entity.Transaction;
+import com.utc.flight_booking_service.payment.enums.PaymentStatus;
 import com.utc.flight_booking_service.payment.mapper.TransactionMapper;
 import com.utc.flight_booking_service.payment.repository.TransactionRepository;
 import com.utc.flight_booking_service.payment.specification.TransactionSpecification;
@@ -64,4 +67,11 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionMapper.toClientTransactionResponseList(transactions);
     }
 
+    @Override
+    @Transactional
+    public Transaction findSuccessfulVnpayTransactionByBookingId(UUID bookingId){
+        return transactionRepository.findByBookingIdAndStatusAndPaymentMethod(
+                        bookingId, PaymentStatus.SUCCESS, "VNPAY")
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+    }
 }

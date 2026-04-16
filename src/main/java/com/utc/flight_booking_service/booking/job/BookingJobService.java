@@ -31,23 +31,23 @@ public class BookingJobService {
             for (Booking booking : pendingBookings) {
                 try {
                     bookingService.cancelSingleBookingBySystem(booking.getId());
+                    count ++;
                 } catch (Exception e) {
                     log.error("Lỗi khi hủy vé rác PNR {}: {}", booking.getPnrCode(), e.getMessage());
                 }
-                count ++;
             }
         }
         log.info("Huỷ thành công {} vé đang ở trạng thái pending", count);
 
     }
 
-    @Scheduled(cron = "0 0 2 * * ?")
-    @Transactional
-    public void hardDeleteOldCancelledBookings() {
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        log.info("Bắt đầu dọn dẹp các Booking rác bị HỦY từ trước ngày {}", thirtyDaysAgo);
-        int deletedCount = bookingService.deleteByStatusAndCreatedAtBefore(BookingStatus.CANCELLED, thirtyDaysAgo);
-        log.info("Đã dọn dẹp thành công {} Booking rác và giải phóng Database!", deletedCount);
-    }
+//    @Scheduled(cron = "0 0 2 * * ?")
+//    @Transactional
+//    public void hardDeleteOldCancelledBookings() {
+//        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+//        log.info("Bắt đầu dọn dẹp các Booking rác bị HỦY từ trước ngày {}", thirtyDaysAgo);
+//        int deletedCount = bookingService.deleteByStatusAndCreatedAtBefore(BookingStatus.CANCELLED, thirtyDaysAgo);
+//        log.info("Đã dọn dẹp thành công {} Booking rác và giải phóng Database!", deletedCount);
+//    }
 }
 

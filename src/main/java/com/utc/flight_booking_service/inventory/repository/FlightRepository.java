@@ -3,6 +3,8 @@ package com.utc.flight_booking_service.inventory.repository;
 import com.utc.flight_booking_service.inventory.entity.Flight;
 import com.utc.flight_booking_service.inventory.repository.projection.ICheapestPriceProjection;
 import com.utc.flight_booking_service.inventory.repository.projection.IFlightStatsProjection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,10 +22,19 @@ import java.util.UUID;
 public interface FlightRepository extends JpaRepository<Flight, UUID>, JpaSpecificationExecutor<Flight> {
     Optional<Flight> findByAviationFlightId(String aviationFlightId);
 
-    @EntityGraph(attributePaths = {"flightClasses", "airline"})
+    @Override
+    @EntityGraph(attributePaths = {"airline", "origin", "destination", "aircraft"})
     List<Flight> findAll(Specification<Flight> spec);
 
-    @EntityGraph(attributePaths = {"flightClasses", "airline", "origin", "destination"})
+    @Override
+    @EntityGraph(attributePaths = {"airline", "origin", "destination", "aircraft"})
+    Page<Flight> findAll(Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"airline", "origin", "destination", "aircraft"})
+    Page<Flight> findAll(Specification<Flight> spec, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"airline", "origin", "destination", "aircraft"})
     List<Flight> findAllByIdIn(List<UUID> ids);
 
     @Query("SELECT COUNT(DISTINCT f.id) as totalFlights, " +

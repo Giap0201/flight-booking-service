@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class AncillaryCatalogController {
     AncillaryCatalogService ancillaryCatalogService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     ApiResponse<AdminAncillaryCatalogResponse> createAncillaryCatalog (@Valid @RequestBody AncillaryCatalogCreationRequest request){
@@ -50,6 +52,7 @@ public class AncillaryCatalogController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     ApiResponse<AdminAncillaryCatalogResponse> updateAncillaryCatalog(@PathVariable  UUID id, @Valid @RequestBody AncillaryCatalogUpdateRequest request){
         return ApiResponse.<AdminAncillaryCatalogResponse>builder()
@@ -57,6 +60,7 @@ public class AncillaryCatalogController {
                 .build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     ApiResponse<Void> deleteAncillaryCatalog(@PathVariable UUID id){

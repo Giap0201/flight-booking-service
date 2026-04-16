@@ -1,7 +1,7 @@
 package com.utc.flight_booking_service.payment.repository;
 
-import com.utc.flight_booking_service.payment.dto.response.AdminTransactionResponse;
 import com.utc.flight_booking_service.payment.entity.Transaction;
+import com.utc.flight_booking_service.payment.enums.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -18,4 +18,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     boolean existsByTransactionNo(String vnpBankTranNo);
 
     List<Transaction> findByBookingIdOrderByCreatedAtDesc(UUID bookingId);
+
+    Optional<Transaction> findByBookingIdAndStatusAndPaymentMethod(UUID id, PaymentStatus paymentStatus, String vnpay);
 }

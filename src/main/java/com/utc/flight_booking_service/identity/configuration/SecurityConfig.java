@@ -28,7 +28,7 @@ public class SecurityConfig {
     // Danh sách các Endpoint công khai cho Auth và User
     private final String[] PUBLIC_ENDPOINTS = {
             "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh",
-            "/bookings/**", "/users/forgot-password", "/flights/**"
+             "/users/forgot-password"
     };
 
     // Danh sách các Endpoint công khai cho Thanh toán và Tra cứu
@@ -57,6 +57,7 @@ public class SecurityConfig {
                         // Cho phép GET/POST cho các thông tin thanh toán và sân bay
                         .requestMatchers(HttpMethod.GET, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v1/admin/flights/**").permitAll()
                         // Cấu hình cho Swagger UI
                         .requestMatchers(
                                 "/swagger-ui/**",
