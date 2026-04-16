@@ -71,7 +71,8 @@ public enum ErrorCode {
     BOOKING_ALREADY_ISSUED(2029, "Đơn đặt chỗ này đã được xuất vé từ trước", HttpStatus.BAD_REQUEST),
     NON_REFUNDABLE(2030, "Vé không hỗ trợ hoàn tiền do quá sát giờ khởi hành", HttpStatus.BAD_REQUEST),
     REFUND_FAILED(2031, "Xử lý hoàn tiền thất bại, hệ thống chưa hủy vé. Vui lòng thử lại", HttpStatus.INTERNAL_SERVER_ERROR),
-
+    PASSENGER_NOT_FOUND(2032, "Không tìm thấy hành khách trong đơn đặt chỗ này", HttpStatus.NOT_FOUND),
+    CANNOT_CHANGE_PASSENGER_TYPE(2033, "Không thể thay đổi ngày sinh dẫn đến thay đổi phân loại hành khách (Người lớn/Trẻ em/Em bé)", HttpStatus.BAD_REQUEST),
     // TRANSACTION
     TRANSACTION_NOT_FOUND(2050, "Không tìm thấy Transaction", HttpStatus.NOT_FOUND),
 

@@ -3,8 +3,12 @@ package com.utc.flight_booking_service.booking.service;
 import com.utc.flight_booking_service.booking.entity.*;
 import com.utc.flight_booking_service.booking.enums.AncillaryCatalogStatus;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
+import com.utc.flight_booking_service.booking.enums.PassengerType;
 import com.utc.flight_booking_service.booking.enums.TicketStatus;
-import com.utc.flight_booking_service.booking.mapper.*;
+import com.utc.flight_booking_service.booking.mapper.BookingDtoMapper;
+import com.utc.flight_booking_service.booking.mapper.BookingFlightMapper;
+import com.utc.flight_booking_service.booking.mapper.BookingMapper;
+import com.utc.flight_booking_service.booking.mapper.PassengerMapper;
 import com.utc.flight_booking_service.booking.repository.AncillaryCatalogRepository;
 import com.utc.flight_booking_service.booking.repository.BookingRepository;
 import com.utc.flight_booking_service.booking.repository.TicketRepository;
@@ -16,6 +20,7 @@ import com.utc.flight_booking_service.booking.response.client.BookingDetailRespo
 import com.utc.flight_booking_service.booking.response.client.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.share.ETicketEmailModel;
 import com.utc.flight_booking_service.booking.specification.BookingSpecification;
+import com.utc.flight_booking_service.booking.utils.PassengerUtils;
 import com.utc.flight_booking_service.booking.utils.PnrGenerator;
 import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.exception.AppException;
@@ -25,8 +30,6 @@ import com.utc.flight_booking_service.identity.service.IUserService;
 import com.utc.flight_booking_service.inventory.dto.response.FlightPriceResponseDTO;
 import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import com.utc.flight_booking_service.notification.service.EmailService;
-import com.utc.flight_booking_service.payment.dto.response.AdminTransactionResponse;
-import com.utc.flight_booking_service.payment.dto.response.ClientTransactionResponse;
 import com.utc.flight_booking_service.payment.entity.Transaction;
 import com.utc.flight_booking_service.payment.service.TransactionService;
 import com.utc.flight_booking_service.payment.service.VNPayRefundService;
@@ -381,6 +384,58 @@ public class BookingServiceImpl implements BookingService {
         }
         emailService.sendBookingConfirmationEmail(booking);
         log.info("Gửi lại email thành công. BookingId: {}, PNR: {}", bookingId, booking.getPnrCode());
+    }
+
+    @Override
+    public void updatePassengerInfo(String pnrCode, UUID passengerId, UpdatePassengerRequest request) {
+        Booking booking = getValidMyBookingForModification(pnrCode);
+        Passenger passenger = booking.getPassengers().stream()
+                .filter(p -> p.getId().equals(passengerId))
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.PASSENGER_NOT_FOUND));
+
+        // 3. Tìm chặng bay đầu tiên để lấy thời gian cất cánh làm mốc tính tuổi
+        BookingFlight firstFlight = booking.getBookingFlights().stream()
+                .min(Comparator.comparing(BookingFlight::getSegmentNo))
+                .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
+
+        PassengerType currentType = PassengerUtils.calculatePassengerType(
+                passenger.getDateOfBirth(),
+                firstFlight.getOriginDepartureTime()
+        );
+
+        PassengerType newType = PassengerUtils.calculatePassengerType(
+                request.getDob(),
+                firstFlight.getOriginDepartureTime()
+        );
+
+        if (currentType != newType) {
+            log.warn("User {} cố gắng đổi ngày sinh làm thay đổi loại hành khách. PNR: {}, PassengerID: {}",
+                    booking.getUserId(), pnrCode, passengerId);
+            throw new AppException(ErrorCode.CANNOT_CHANGE_PASSENGER_TYPE);
+        }
+        passenger.setFirstName(request.getFirstName());
+        passenger.setLastName(request.getLastName());
+        passenger.setDateOfBirth(request.getDob());
+        passenger.setGender(request.getGender());
+        bookingRepository.save(booking);
+        log.info("Đã cập nhật thông tin hành khách thành công cho PNR: {}", pnrCode);
+    }
+
+    private Booking getValidMyBookingForModification(String pnrCode) {
+        UserResponse user = userService.getMyInfo();
+        Booking booking = getBookingEntityByPnr(pnrCode);
+        if (booking.getUserId() == null || !booking.getUserId().equals(user.getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+        // B. Chỉ cho phép sửa vé đã thanh toán thành công hoặc đã xuất vé
+        if (booking.getStatus() != BookingStatus.CONFIRMED && booking.getStatus() != BookingStatus.PAID) {
+            throw new AppException(ErrorCode.INVALID_BOOKING_STATUS);
+        }
+        // C. Kiểm tra Buffer Time (Không cho sửa nếu máy bay sắp cất cánh)
+        validateDepartureTime(booking);
+
+        return booking;
     }
 
 

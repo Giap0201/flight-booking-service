@@ -2,6 +2,7 @@ package com.utc.flight_booking_service.booking.controller;
 
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.request.UpdatePassengerRequest;
 import com.utc.flight_booking_service.booking.response.client.BookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingCreatedResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingDetailResponse;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -103,5 +105,19 @@ public class BookingController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(pdfBytes);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/{pnrCode}/passengers/{passengerId}")
+    public ApiResponse<String> updatePassengerInfo(
+            @PathVariable String pnrCode,
+            @PathVariable UUID passengerId,
+            @RequestBody @Valid UpdatePassengerRequest request) {
+
+        bookingService.updatePassengerInfo(pnrCode, passengerId, request);
+
+        return ApiResponse.<String>builder()
+                .result("Cập nhật thông tin hành khách thành công")
+                .build();
     }
 }
