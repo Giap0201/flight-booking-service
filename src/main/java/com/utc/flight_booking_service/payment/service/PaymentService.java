@@ -1,8 +1,15 @@
 package com.utc.flight_booking_service.payment.service;
 
 import com.utc.flight_booking_service.booking.entity.Booking;
+import com.utc.flight_booking_service.booking.entity.BookingFlight;
 import com.utc.flight_booking_service.booking.enums.BookingStatus;
+import com.utc.flight_booking_service.booking.enums.TicketStatus;
+import com.utc.flight_booking_service.booking.repository.BookingRepository;
 import com.utc.flight_booking_service.booking.service.BookingService;
+import com.utc.flight_booking_service.exception.AppException;
+import com.utc.flight_booking_service.exception.ErrorCode;
+import com.utc.flight_booking_service.inventory.service.FlightClassService;
+import com.utc.flight_booking_service.inventory.service.IFlightClassService;
 import com.utc.flight_booking_service.notification.service.EmailService;
 import com.utc.flight_booking_service.payment.config.VNPayConfig;
 import com.utc.flight_booking_service.payment.entity.Transaction;
@@ -20,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -127,8 +135,6 @@ public class PaymentService {
     }
 
     public Map<String, String> processIpn(HttpServletRequest request) {
-        // (Giữ nguyên logic cực kỳ chặt chẽ của bạn ở hàm này)
-        // ... (phần code processIpn cũ không đổi)
         Map<String, String> response = new HashMap<>();
         try {
             Map<String, String> fields = new HashMap<>();
@@ -205,7 +211,7 @@ public class PaymentService {
             transactionRepository.save(transaction);
 
             if ("00".equals(responseCode)) {
-                bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
+//                bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                 bookingService.issueTicketsForBooking(booking.getId());
                 emailService.sendBookingConfirmationEmail(bookingService.getBookingById(booking.getId()));
                 log.info("Gửi mail thành công cho PNR: {}", booking.getPnrCode());
@@ -248,8 +254,6 @@ public class PaymentService {
         Booking booking = bookingService.getBookingEntityByPnr(pnrCode);
 
         // ⚡ FIX 3: Sử dụng biến reactBaseUrl đã được khai báo @Value ở đầu class
-        // (Xóa dòng String reactBaseUrl = "http://localhost:5173"; đi)
-
         if (signValue.equals(vnp_SecureHash)) {
             if ("android".equals(platform)) {
                 return "flightbooking://payment-result?code=" + responseCode +
@@ -343,7 +347,7 @@ public class PaymentService {
                                 transactionRepository.save(transaction);
                             }
 
-                            bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
+//                            bookingService.updateBookingStatus(booking.getId(), BookingStatus.CONFIRMED);
                             bookingService.issueTicketsForBooking(booking.getId());
                             emailService.sendBookingConfirmationEmail(bookingService.getBookingById(booking.getId()));
                             log.info("JOB ĐỐI SOÁT ĐÃ CỨU HỘ THÀNH CÔNG VÉ: {}", booking.getPnrCode());
@@ -397,6 +401,7 @@ public class PaymentService {
         return PaymentStatus.PENDING;
     }
 
+
     public Map<String, String> verifyPaymentStatusImmediately(String pnrCode) {
         Booking booking = bookingService.getBookingEntityByPnr(pnrCode);
 
@@ -416,4 +421,8 @@ public class PaymentService {
 
         return Map.of("status", booking.getStatus().name(), "message", "Trạng thái hiện tại của vé: " + booking.getStatus().name());
     }
+
+
+
+
 }

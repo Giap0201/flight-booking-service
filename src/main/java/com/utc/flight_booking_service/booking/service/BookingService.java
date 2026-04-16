@@ -5,6 +5,7 @@ import com.utc.flight_booking_service.booking.enums.BookingStatus;
 import com.utc.flight_booking_service.booking.request.AdminBookingSearchRequest;
 import com.utc.flight_booking_service.booking.request.BookingRequest;
 import com.utc.flight_booking_service.booking.request.BookingSearchRequest;
+import com.utc.flight_booking_service.booking.request.UpdatePassengerRequest;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingDetailResponse;
 import com.utc.flight_booking_service.booking.response.admin.AdminBookingSummaryResponse;
 import com.utc.flight_booking_service.booking.response.client.BookingCreatedResponse;
@@ -57,5 +58,11 @@ public interface BookingService {
 
     // Lay thong tin booking danh cho admin (ca transaction)
     AdminBookingDetailResponse getBookingDetailsForAdmin(UUID id);
+
+    void forceCancelAndRefund(UUID bookingId);
+
+    void resendBookingEmail(UUID bookingId);
+
+    void updatePassengerInfo(String pnrCode, UUID passengerId, UpdatePassengerRequest request);
 
 }

@@ -34,7 +34,7 @@ public class SecurityConfig {
     // Danh sách các Endpoint công khai cho Thanh toán và Tra cứu
     private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
             "/payments/**", "/flights/**", "/ancillary-catalogs/**",
-            "/v1/airports/**", "/v1/airlines/**"
+            "/v1/airports/**", "/v1/airlines/**", "/ping"
     };
 
     // Đọc danh sách Domain được phép từ biến môi trường app.cors.allowed-origins
