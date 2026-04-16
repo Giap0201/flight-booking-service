@@ -1,9 +1,11 @@
 package com.utc.flight_booking_service.booking.response.client;
 
+import com.utc.flight_booking_service.booking.enums.Gender;
 import com.utc.flight_booking_service.booking.enums.PassengerType;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,5 +19,7 @@ public class PassengerTicketResponse {
     String firstName;
     String lastName;
     PassengerType type;
+    LocalDate dateOfBirth;
+    Gender gender;
     List<TicketDetailResponse> tickets;
 }
