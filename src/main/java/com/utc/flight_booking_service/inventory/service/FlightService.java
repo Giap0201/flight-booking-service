@@ -135,7 +135,7 @@ public class FlightService implements IFlightService{
                 .totalPages(flightPage.getTotalPages())
                 .totalElements(flightPage.getTotalElements())
                 .data(flightPage.getContent().stream()
-                        .map(flightSearchMapper::toResponseDTO) // [cite: 145]
+                        .map(flightSearchMapper::toResponseDTO) //
                         .toList())
                 .build();
     }
