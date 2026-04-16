@@ -34,7 +34,7 @@ public class SecurityConfig {
     // Danh sách các Endpoint công khai cho Thanh toán và Tra cứu
     private final String[] PAYMENT_PUBLIC_ENDPOINTS = {
             "/payments/**", "/flights/**", "/ancillary-catalogs/**",
-            "/v1/airports/**", "/v1/airlines/**", "/ping"
+            "/v1/airports/**", "/v1/airlines/**"
     };
 
     // Đọc danh sách Domain được phép từ biến môi trường app.cors.allowed-origins
@@ -53,6 +53,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(request -> request
                         // Cho phép các yêu cầu POST công khai
+                        .requestMatchers(HttpMethod.GET, "/ping/**").permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                         // Cho phép GET/POST cho các thông tin thanh toán và sân bay
                         .requestMatchers(HttpMethod.GET, PAYMENT_PUBLIC_ENDPOINTS).permitAll()
