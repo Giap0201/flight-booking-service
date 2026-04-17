@@ -54,6 +54,7 @@ public class AviationFlightDTO {
     public static class FlightDetailDTO {
         String number;
         String iata; // Map to Flight.flightNumber (VD: VN123)
+        private String icao;
     }
 
     @Data

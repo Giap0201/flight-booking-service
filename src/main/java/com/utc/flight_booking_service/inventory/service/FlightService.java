@@ -139,4 +139,28 @@ public class FlightService implements IFlightService{
                         .toList())
                 .build();
     }
+
+    @Override
+    public PageResponse<FlightSearchResponseDTO> searchFlightsForAdmin(
+            String flightNumber, String airlineCode, String originCode, String destinationCode,
+            int page, int size, String sortBy, String sortDir) {
+
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Flight> flightPage = flightRepository.adminSearchFlights(
+                flightNumber, airlineCode, originCode, destinationCode, pageable);
+
+        return PageResponse.<FlightSearchResponseDTO>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalPages(flightPage.getTotalPages())
+                .totalElements(flightPage.getTotalElements())
+                .data(flightPage.getContent().stream()
+                        .map(flightSearchMapper::toResponseDTO)
+                    .toList())
+            .build();
+    }
 }

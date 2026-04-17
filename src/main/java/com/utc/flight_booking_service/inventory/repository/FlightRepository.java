@@ -37,6 +37,19 @@ public interface FlightRepository extends JpaRepository<Flight, UUID>, JpaSpecif
     @EntityGraph(attributePaths = {"airline", "origin", "destination", "aircraft"})
     List<Flight> findAllByIdIn(List<UUID> ids);
 
+    @EntityGraph(attributePaths = {"airline", "origin", "destination", "aircraft"})
+    @Query("SELECT f FROM Flight f WHERE " +
+            "(:flightNumber IS NULL OR UPPER(f.flightNumber) LIKE UPPER(CONCAT('%', CAST(:flightNumber AS string), '%'))) AND " +
+            "(:airlineCode IS NULL OR f.airline.code = :airlineCode) AND " +
+            "(:originCode IS NULL OR f.origin.code = :originCode) AND " +
+            "(:destinationCode IS NULL OR f.destination.code = :destinationCode)")
+    Page<Flight> adminSearchFlights(
+            @Param("flightNumber") String flightNumber,
+            @Param("airlineCode") String airlineCode,
+            @Param("originCode") String originCode,
+            @Param("destinationCode") String destinationCode,
+            Pageable pageable);
+
     @Query("SELECT COUNT(DISTINCT f.id) as totalFlights, " +
             "SUM(fc.totalSeats) as totalSeats, " +
             "SUM(fc.availableSeats) as availableSeats " +
