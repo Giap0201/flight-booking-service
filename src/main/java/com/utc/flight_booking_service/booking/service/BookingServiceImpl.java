@@ -98,7 +98,8 @@ public class BookingServiceImpl implements BookingService {
             booking.setExpireAt(LocalDateTime.now().plusMinutes(PAYMENT_TIMEOUT_MINUTES));
             booking.setUserId(user.getId());
 
-            request.getPassengers().forEach(passenger -> booking.addPassenger(passengerMapper.toPassenger(passenger)));
+            request.getPassengers().forEach(passenger ->
+                    booking.addPassenger(passengerMapper.toPassenger(passenger)));
 
             for (int i = 0; i < request.getFlights().size(); i++) {
                 BookingFlightRequest fReq = request.getFlights().get(i);

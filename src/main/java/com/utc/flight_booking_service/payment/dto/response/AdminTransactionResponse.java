@@ -21,4 +21,5 @@ public class AdminTransactionResponse {
     String bankRefNo;
     String gatewayResponse;
     LocalDateTime createdAt;
+    UUID bookingId;
 }
