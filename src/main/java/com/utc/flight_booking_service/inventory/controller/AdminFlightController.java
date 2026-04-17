@@ -89,4 +89,22 @@ public class AdminFlightController {
                 .result(flightService.getAllFlights(page, size, sortBy, sortDir))
                 .build();
     }
+
+    @GetMapping("/search")
+    public ApiResponse<PageResponse<FlightSearchResponseDTO>> adminSearch(
+            @RequestParam(required = false) String flightNumber,
+            @RequestParam(required = false) String airlineCode,
+            @RequestParam(required = false) String originCode,
+            @RequestParam(required = false) String destinationCode,
+            @RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
+            @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size,
+            @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_FLIGHT_BY) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION) String sortDir
+    ) {
+        return ApiResponse.<PageResponse<FlightSearchResponseDTO>>builder()
+                .message("Tìm kiếm chuyến bay cho quản trị viên thành công")
+                .result(flightService.searchFlightsForAdmin(
+                        flightNumber, airlineCode, originCode, destinationCode, page, size, sortBy, sortDir))
+                .build();
+    }
 }
