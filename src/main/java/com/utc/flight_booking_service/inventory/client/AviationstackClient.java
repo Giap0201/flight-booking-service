@@ -12,6 +12,8 @@ public interface AviationstackClient {
     @GetMapping("/flights")
     AviationResponseDTO getFlights(
             @RequestParam("access_key") String apiKey,
+            @RequestParam(value = "dep_iata", required = false) String depIata,
+            @RequestParam(value = "arr_iata", required = false) String arrIata,
             @RequestParam(value = "limit", defaultValue = "100") int limit
     );
 
