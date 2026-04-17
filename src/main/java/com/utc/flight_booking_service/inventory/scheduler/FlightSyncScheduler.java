@@ -16,7 +16,8 @@ public class FlightSyncScheduler {
     // Chay moi 1 phut
 //     @Scheduled(cron = "0 * * * * ?")
     // Chạy vào lúc 2 giờ 0 phút 0 giây sáng, mỗi ngày
-    @Scheduled(cron = "0 0 2 * * ?")
+//    @Scheduled(cron = "0 0 2 * * ?")
+    @Scheduled(cron = "0 0 * * * ?")
     public void syncFlightsDaily() {
         log.info("Bắt đầu chạy Scheduled Job: Đồng bộ dữ liệu chuyến bay từ Aviationstack...");
 
