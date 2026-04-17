@@ -5,9 +5,7 @@ import com.utc.flight_booking_service.inventory.entity.*;
 import com.utc.flight_booking_service.inventory.repository.AircraftRepository;
 import com.utc.flight_booking_service.inventory.repository.AirlineRepository;
 import com.utc.flight_booking_service.inventory.repository.AirportRepository;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
