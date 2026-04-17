@@ -1,5 +1,6 @@
 package com.utc.flight_booking_service.identity.service;
 
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.identity.dto.request.*;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
 
@@ -27,4 +28,6 @@ public interface IUserService {
     void forgotPassword(ForgotPasswordRequest request);
 
     UserResponse updateInfor(UserUpdateRequest request);
+
+    public PageResponse<UserResponse> getAllUsers(int page, int size, String sortBy, String sortDir);
 }
