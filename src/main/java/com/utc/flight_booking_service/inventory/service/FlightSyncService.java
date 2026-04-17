@@ -35,7 +35,7 @@ public class FlightSyncService implements IFlightSyncService {
     @Transactional
     public String fetchAndMapFlights() {
         // 1. Gọi API lấy dữ liệu (Mặc định lấy tuyến SGN-HAN để tối ưu quota Free Plan)
-        AviationResponseDTO response = aviationClient.getFlights(apiKey, "SGN", "HAN", 100);
+        AviationResponseDTO response = aviationClient.getFlights(apiKey, "HAN", "THD", 100);
 
         if (response == null || response.getData() == null || response.getData().isEmpty()) {
             return "Không có dữ liệu từ API";

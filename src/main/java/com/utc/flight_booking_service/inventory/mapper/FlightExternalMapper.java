@@ -5,7 +5,9 @@ import com.utc.flight_booking_service.inventory.entity.*;
 import com.utc.flight_booking_service.inventory.repository.AircraftRepository;
 import com.utc.flight_booking_service.inventory.repository.AirlineRepository;
 import com.utc.flight_booking_service.inventory.repository.AirportRepository;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
@@ -37,7 +39,8 @@ public abstract class FlightExternalMapper {
     @Mapping(target = "aviationFlightId", expression = "java(dto.getFlight() != null ? " +
             "( (dto.getFlight().getNumber() != null ? dto.getFlight().getNumber() : \"\") + " +
             "  (dto.getFlight().getIata() != null ? dto.getFlight().getIata() : \"\") + " +
-            "  (dto.getFlight().getIcao() != null ? dto.getFlight().getIcao() : \"\") ) : null)")
+            "  (dto.getFlight().getIcao() != null ? dto.getFlight().getIcao() : \"\") + " +
+            "  \"_\" + System.currentTimeMillis() ) : null)")
     public abstract Flight toEntity(AviationFlightDTO dto);
 
     // ==========================================
@@ -96,9 +99,11 @@ public abstract class FlightExternalMapper {
         return aircraftRepository.findById(code).orElseGet(() -> {
             Aircraft ac = Aircraft.builder().code(code).name("Airbus/Boeing " + code).build();
             if (java.util.List.of("B787", "A350").contains(code)) {
-                ac.setTotalEconomySeats(250); ac.setTotalBusinessSeats(40);
+                ac.setTotalEconomySeats(250);
+                ac.setTotalBusinessSeats(40);
             } else {
-                ac.setTotalEconomySeats(180); ac.setTotalBusinessSeats(16);
+                ac.setTotalEconomySeats(180);
+                ac.setTotalBusinessSeats(16);
             }
             return aircraftRepository.save(ac);
         });
