@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -20,4 +21,5 @@ public class AdminTransactionResponse {
     String bankRefNo;
     String gatewayResponse;
     LocalDateTime createdAt;
+    UUID bookingId;
 }

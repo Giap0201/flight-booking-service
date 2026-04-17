@@ -1,6 +1,8 @@
 package com.utc.flight_booking_service.identity.controller;
 
 import com.utc.flight_booking_service.common.ApiResponse;
+import com.utc.flight_booking_service.common.AppConstants;
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.identity.dto.request.*;
 import com.utc.flight_booking_service.identity.dto.response.UserResponse;
 import com.utc.flight_booking_service.identity.service.IUserService;
@@ -10,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,8 +29,15 @@ public class UserController {
     }
 
     @GetMapping
-    ApiResponse<List<UserResponse>> getUsers() {
-        return ApiResponse.<List<UserResponse>>builder().result(userService.getUsers())
+    public ApiResponse<PageResponse<UserResponse>> getAllUsers(
+            @RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
+            @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int size,
+            @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_USER_BY) String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION) String sortDir
+    ) {
+        return ApiResponse.<PageResponse<UserResponse>>builder()
+                .message("Lấy danh sách người dùng thành công")
+                .result(userService.getAllUsers(page, size, sortBy, sortDir))
                 .build();
     }
 

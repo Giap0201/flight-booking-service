@@ -1,5 +1,6 @@
 package com.utc.flight_booking_service.identity.service.impl;
 
+import com.utc.flight_booking_service.common.PageResponse;
 import com.utc.flight_booking_service.exception.AppException;
 import com.utc.flight_booking_service.exception.ErrorCode;
 import com.utc.flight_booking_service.identity.configuration.passwordGenerator;
@@ -17,6 +18,10 @@ import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -157,6 +162,31 @@ public class UserService implements IUserService {
                 .build();
 
         emailService.sendNewPasswordEmail(newPasswordEmailRequest);
+    }
+
+    @Override
+    public PageResponse<UserResponse> getAllUsers(int page, int size, String sortBy, String sortDir) {
+
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+
+        Page<User> userPage = userRepository.findAll(pageable);
+
+
+        return PageResponse.<UserResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalPages(userPage.getTotalPages())
+                .totalElements(userPage.getTotalElements())
+                .data(userPage.getContent().stream()
+                        .map(userMapper::toUserResponse)
+                        .toList())
+                .build();
     }
 
 }

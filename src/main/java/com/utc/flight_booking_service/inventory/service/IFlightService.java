@@ -21,4 +21,8 @@ public interface IFlightService {
     FlightStatisticsResponseDTO getTodayStatistics();
 
     PageResponse<FlightSearchResponseDTO> getAllFlights(int page, int size, String sortBy, String sortDir);
+
+    PageResponse<FlightSearchResponseDTO> searchFlightsForAdmin(
+            String flightNumber, String airlineCode, String originCode, String destinationCode,
+            int page, int size, String sortBy, String sortDir);
 }

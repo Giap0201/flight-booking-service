@@ -8,4 +8,5 @@ public class AppConstants {
     public static final String DEFAULT_SORT_AIRLINE_BY = "name";
     public static final String DEFAULT_SORT_AIRPORT_BY = "name";
     public static final String DEFAULT_SORT_DIRECTION = "asc";   // Mặc định tăng dần
+    public static final String DEFAULT_SORT_USER_BY = "fullName";
 }
