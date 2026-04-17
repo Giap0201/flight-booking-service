@@ -40,8 +40,8 @@ public class FlightSyncService implements IFlightSyncService{
     @Transactional // Đảm bảo toàn bộ batch save được thực thi trong 1 transaction duy nhất
     public String fetchAndMapFlights() {
         // Mặc định API limit là 100, tùy thuộc vào cấu hình plan
-        AviationResponseDTO response = aviationClient.getFlights(apiKey, "HAN",
-                "SGN",100);
+        AviationResponseDTO response = aviationClient.getFlights(apiKey, "SGN",
+                "HAN",100);
 
         if (response == null || response.getData() == null || response.getData().isEmpty()) {
             return "Không có dữ liệu từ API";
