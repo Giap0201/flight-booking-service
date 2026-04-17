@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChangePasswordRequest {
     @NotBlank(message = "PASSWORD_REQUIRED")
-    @Size(min = 6, max = 50, message = "PASSWORD_INVALID")
+    @Size(min = 5, max = 50, message = "PASSWORD_INVALID")
     String oldPassword;
     @NotBlank(message = "PASSWORD_REQUIRED")
     @Size(min = 6, max = 50, message = "PASSWORD_INVALID")
