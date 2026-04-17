@@ -24,7 +24,6 @@ public abstract class FlightExternalMapper {
 
     private static final String[] TOP_GLOBAL_AIRLINES = {"AA", "DL", "UA", "EK", "QR", "LH", "SQ", "VN", "QH"};
     private static final String[] TOP_GLOBAL_AIRPORTS = {"ATL", "DXB", "LHR", "HND", "LAX", "SIN", "CDG", "HAN", "SGN"};
-    private static final int DAYS_TO_SHIFT = 30;
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "flightNumber", source = "flight.iata")
@@ -107,10 +106,13 @@ public abstract class FlightExternalMapper {
 
     protected LocalDateTime mapStringToLocalDateTime(String value) {
         if (value == null || value.trim().isEmpty()) return null;
+
+        int randomDays = ThreadLocalRandom.current().nextInt(1, 31);
+
         try {
-            return OffsetDateTime.parse(value).toLocalDateTime().plusDays(DAYS_TO_SHIFT);
+            return OffsetDateTime.parse(value).toLocalDateTime().plusDays(randomDays);
         } catch (Exception e) {
-            return LocalDateTime.parse(value).plusDays(DAYS_TO_SHIFT);
+            return LocalDateTime.parse(value).plusDays(randomDays);
         }
     }
 }
