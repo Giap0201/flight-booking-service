@@ -36,12 +36,38 @@ public abstract class FlightExternalMapper {
     @Mapping(target = "origin", source = "departure")
     @Mapping(target = "destination", source = "arrival")
     @Mapping(target = "aircraft", source = "aircraft")
+// Bổ sung System.currentTimeMillis() vào ID
     @Mapping(target = "aviationFlightId", expression = "java(dto.getFlight() != null ? " +
             "( (dto.getFlight().getNumber() != null ? dto.getFlight().getNumber() : \"\") + " +
             "  (dto.getFlight().getIata() != null ? dto.getFlight().getIata() : \"\") + " +
             "  (dto.getFlight().getIcao() != null ? dto.getFlight().getIcao() : \"\") + " +
             "  \"_\" + System.currentTimeMillis() ) : null)")
     public abstract Flight toEntity(AviationFlightDTO dto);
+
+    // AfterMapping bắt buộc phải có đủ (dto, flight) để MapStruct không bị lỗi FilerException
+    @AfterMapping
+    protected void linkCustomLogic(AviationFlightDTO dto, @MappingTarget Flight.FlightBuilder flightBuilder) {
+        // Lấy dữ liệu tạm thời từ DTO để tính toán vì lúc này Flight chưa build xong
+        if (dto.getDeparture() != null && dto.getDeparture().getScheduled() != null &&
+                dto.getArrival() != null && dto.getArrival().getScheduled() != null) {
+
+            // 1. Parse thời gian từ chuỗi gốc của DTO
+            LocalDateTime departureTime = mapStringToLocalDateTime(dto.getDeparture().getScheduled());
+            LocalDateTime arrivalTime = mapStringToLocalDateTime(dto.getArrival().getScheduled());
+
+            if (departureTime != null && arrivalTime != null) {
+                // 2. Sinh số ngày ngẫu nhiên
+                int randomDays = java.util.concurrent.ThreadLocalRandom.current().nextInt(3, 31);
+
+                // 3. Gán lại giá trị đã cộng ngày vào Builder
+                flightBuilder.departureTime(departureTime.plusDays(randomDays));
+                flightBuilder.arrivalTime(arrivalTime.plusDays(randomDays));
+
+                // Log thử để kiểm tra trong Console
+                System.out.println("===> Đã cộng " + randomDays + " ngày cho chuyến bay: " + dto.getFlight().getIata());
+            }
+        }
+    }
 
     // ==========================================
     // LOGIC MAP AIRLINE (RANDOM FALLBACK)
@@ -111,13 +137,10 @@ public abstract class FlightExternalMapper {
 
     protected LocalDateTime mapStringToLocalDateTime(String value) {
         if (value == null || value.trim().isEmpty()) return null;
-
-        int randomDays = ThreadLocalRandom.current().nextInt(1, 31);
-
         try {
-            return OffsetDateTime.parse(value).toLocalDateTime().plusDays(randomDays);
+            return java.time.OffsetDateTime.parse(value).toLocalDateTime();
         } catch (Exception e) {
-            return LocalDateTime.parse(value).plusDays(randomDays);
+            return java.time.LocalDateTime.parse(value);
         }
     }
 }
