@@ -89,7 +89,6 @@ public class BookingServiceImpl implements BookingService {
         try {
             for (BookingFlightRequest fReq : request.getFlights()) {
                 flightClassService.decreaseSeats(fReq.getFlightClassId(), totalPassengers);
-                reservedFlightClasses.add(fReq.getFlightClassId());
             }
 
             Booking booking = bookingMapper.toBooking(request);
@@ -98,19 +97,21 @@ public class BookingServiceImpl implements BookingService {
             booking.setExpireAt(LocalDateTime.now().plusMinutes(PAYMENT_TIMEOUT_MINUTES));
             booking.setUserId(user.getId());
 
-            request.getPassengers().forEach(passenger ->
-                    booking.addPassenger(passengerMapper.toPassenger(passenger)));
+//            request.getPassengers().forEach(passenger ->
+//                    booking.addPassenger(passengerMapper.toPassenger(passenger)));
+            createPassenger(request, booking);
 
-            for (int i = 0; i < request.getFlights().size(); i++) {
-                BookingFlightRequest fReq = request.getFlights().get(i);
-                BookingFlight bookingFlight = bookingFlightMapper.toBookingFlight(fReq);
-                FlightPriceResponseDTO flightInfo = flightClassService.getFlightPrice(fReq.getFlightClassId());
-                bookingFlight.setSegmentNo(i + 1);
-                bookingFlight.setOriginFlightNumber(flightInfo.getFlightNumber());
-                bookingFlight.setOriginDepartureTime(flightInfo.getDepartureTime());
-                bookingFlight.setOriginArrivalTime(flightInfo.getArrivalTime());
-                booking.addBookingFlight(bookingFlight);
-            }
+//            for (int i = 0; i < request.getFlights().size(); i++) {
+//                BookingFlightRequest fReq = request.getFlights().get(i);
+//                BookingFlight bookingFlight = bookingFlightMapper.toBookingFlight(fReq);
+//                FlightPriceResponseDTO flightInfo = flightClassService.getFlightPrice(fReq.getFlightClassId());
+//                bookingFlight.setSegmentNo(i + 1);
+//                bookingFlight.setOriginFlightNumber(flightInfo.getFlightNumber());
+//                bookingFlight.setOriginDepartureTime(flightInfo.getDepartureTime());
+//                bookingFlight.setOriginArrivalTime(flightInfo.getArrivalTime());
+//                booking.addBookingFlight(bookingFlight);
+//            }
+            createBookingFlight(request, booking);
 
             List<Ticket> tickets = priceService.calculateTickets(booking, request.getFlights());
             BigDecimal totalFare = tickets.stream().map(Ticket::getBaseFare).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -121,22 +122,23 @@ public class BookingServiceImpl implements BookingService {
             BigDecimal totalAncillaryAmount = BigDecimal.ZERO;
 
             if (request.getBookingAncillaries() != null && !request.getBookingAncillaries().isEmpty()) {
-                for (BookingAncillaryRequest ancReq : request.getBookingAncillaries()) {
-                    AncillaryCatalog catalog = ancillaryCatalogRepository.findByIdAndStatus(ancReq.getCatalogId(), AncillaryCatalogStatus.ACTIVE)
-                            .orElseThrow(() -> new AppException(ErrorCode.ANCILLARY_CATALOG_NOT_FOUND));
-                    Passenger p = booking.getPassengers().get(ancReq.getPassengerIndex());
-                    BookingFlight bf = booking.getBookingFlights().stream()
-                            .filter(f -> f.getSegmentNo() == ancReq.getSegmentNo())
-                            .findFirst()
-                            .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
-
-                    BookingAncillary ancillary = BookingAncillary.builder()
-                            .booking(booking).catalog(catalog).passenger(p)
-                            .bookingFlight(bf).amount(catalog.getPrice())
-                            .build();
-                    totalAncillaryAmount = totalAncillaryAmount.add(catalog.getPrice());
-                    booking.addBookingAncillary(ancillary);
-                }
+//                for (BookingAncillaryRequest ancReq : request.getBookingAncillaries()) {
+//                    AncillaryCatalog catalog = ancillaryCatalogRepository.findByIdAndStatus(ancReq.getCatalogId(), AncillaryCatalogStatus.ACTIVE)
+//                            .orElseThrow(() -> new AppException(ErrorCode.ANCILLARY_CATALOG_NOT_FOUND));
+//                    Passenger p = booking.getPassengers().get(ancReq.getPassengerIndex());
+//                    BookingFlight bf = booking.getBookingFlights().stream()
+//                            .filter(f -> f.getSegmentNo() == ancReq.getSegmentNo())
+//                            .findFirst()
+//                            .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
+//
+//                    BookingAncillary ancillary = BookingAncillary.builder()
+//                            .booking(booking).catalog(catalog).passenger(p)
+//                            .bookingFlight(bf).amount(catalog.getPrice())
+//                            .build();
+//                    totalAncillaryAmount = totalAncillaryAmount.add(catalog.getPrice());
+//                    booking.addBookingAncillary(ancillary);
+//                }
+                totalAncillaryAmount = createBookingAncillary(request, booking);
             }
 
             booking.setTotalAmount(totalTicketAmount.add(totalAncillaryAmount));
@@ -146,17 +148,51 @@ public class BookingServiceImpl implements BookingService {
             Booking savedBooking = bookingRepository.save(booking);
             return bookingMapper.toBookingCreatedResponse(savedBooking);
 
+        } catch (AppException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Lỗi khi tạo booking, tiến hành rollback ghế cho các chuyến đã giữ: {}", reservedFlightClasses);
-            for (UUID flightClassId : reservedFlightClasses) {
-                try {
-                    flightClassService.increaseSeats(flightClassId, totalPassengers);
-                } catch (Exception rollbackEx) {
-                    log.error("Lỗi khi rollback ghế chuyến bay {}: {}", flightClassId, rollbackEx.getMessage());
-                }
-            }
+            log.error("Lỗi khi tạo booking, Spring sẽ tự động rollback Database: ", e);
             throw new AppException(ErrorCode.BOOKING_CREATION_FAILED);
         }
+    }
+
+    private void createPassenger(BookingRequest request, Booking booking) {
+        request.getPassengers().forEach(passenger ->
+                booking.addPassenger(passengerMapper.toPassenger(passenger)));
+    }
+
+    private void createBookingFlight(BookingRequest request, Booking booking) {
+        for (int i = 0; i < request.getFlights().size(); i++) {
+            BookingFlightRequest fReq = request.getFlights().get(i);
+            BookingFlight bookingFlight = bookingFlightMapper.toBookingFlight(fReq);
+            FlightPriceResponseDTO flightInfo = flightClassService.getFlightPrice(fReq.getFlightClassId());
+            bookingFlight.setSegmentNo(i + 1);
+            bookingFlight.setOriginFlightNumber(flightInfo.getFlightNumber());
+            bookingFlight.setOriginDepartureTime(flightInfo.getDepartureTime());
+            bookingFlight.setOriginArrivalTime(flightInfo.getArrivalTime());
+            booking.addBookingFlight(bookingFlight);
+        }
+    }
+
+    private BigDecimal createBookingAncillary(BookingRequest request, Booking booking) {
+        BigDecimal totalAncillaryAmount = BigDecimal.ZERO;
+        for (BookingAncillaryRequest ancReq : request.getBookingAncillaries()) {
+            AncillaryCatalog catalog = ancillaryCatalogRepository.findByIdAndStatus(ancReq.getCatalogId(), AncillaryCatalogStatus.ACTIVE)
+                    .orElseThrow(() -> new AppException(ErrorCode.ANCILLARY_CATALOG_NOT_FOUND));
+            Passenger p = booking.getPassengers().get(ancReq.getPassengerIndex());
+            BookingFlight bf = booking.getBookingFlights().stream()
+                    .filter(f -> f.getSegmentNo() == ancReq.getSegmentNo())
+                    .findFirst()
+                    .orElseThrow(() -> new AppException(ErrorCode.FLIGHT_NOT_FOUND));
+
+            BookingAncillary ancillary = BookingAncillary.builder()
+                    .booking(booking).catalog(catalog).passenger(p)
+                    .bookingFlight(bf).amount(catalog.getPrice())
+                    .build();
+            totalAncillaryAmount = totalAncillaryAmount.add(catalog.getPrice());
+            booking.addBookingAncillary(ancillary);
+        }
+        return totalAncillaryAmount;
     }
 
     @Override
